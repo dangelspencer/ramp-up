@@ -1,0 +1,9 @@
+export { barbellService } from './barbell.service';
+export { exerciseService } from './exercise.service';
+export { routineService } from './routine.service';
+export { programService } from './program.service';
+export { workoutService } from './workout.service';
+export { bodyCompositionService } from './bodyComposition.service';
+export { goalService } from './goal.service';
+export { settingsService } from './settings.service';
+export { plateInventoryService } from './plateInventory.service';
