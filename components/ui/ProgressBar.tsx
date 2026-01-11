@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 import { useSettings } from '@/hooks';
 
 interface ProgressBarProps {
@@ -102,37 +103,35 @@ export function CircularProgress({
     return colors[color];
   };
 
+  const bgColor = isDark ? '#3f3f46' : '#e4e4e7';
+
   return (
     <View style={{ width: size, height: size }} className="items-center justify-center">
-      <View className="absolute">
-        <View
-          style={{
-            width: size,
-            height: size,
-            borderRadius: size / 2,
-            borderWidth: strokeWidth,
-            borderColor: isDark ? '#3f3f46' : '#e4e4e7',
-          }}
+      <Svg width={size} height={size} style={{ position: 'absolute' }}>
+        {/* Background circle */}
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={bgColor}
+          strokeWidth={strokeWidth}
+          fill="transparent"
         />
-      </View>
-      <View className="absolute" style={{ transform: [{ rotate: '-90deg' }] }}>
-        <View
-          style={{
-            width: size,
-            height: size,
-            borderRadius: size / 2,
-            borderWidth: strokeWidth,
-            borderColor: 'transparent',
-            borderTopColor: getStrokeColor(),
-            borderRightColor:
-              clampedProgress > 25 ? getStrokeColor() : 'transparent',
-            borderBottomColor:
-              clampedProgress > 50 ? getStrokeColor() : 'transparent',
-            borderLeftColor:
-              clampedProgress > 75 ? getStrokeColor() : 'transparent',
-          }}
+        {/* Progress circle */}
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={getStrokeColor()}
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          rotation={-90}
+          origin={`${size / 2}, ${size / 2}`}
         />
-      </View>
+      </Svg>
       <View className="items-center justify-center">
         {children || (showLabel && (
           <Text

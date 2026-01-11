@@ -24,13 +24,13 @@ export function useBarbells() {
     loadBarbells();
   }, [loadBarbells]);
 
-  const createBarbell = useCallback(async (data: { name: string; weight: number; isDefault?: boolean }) => {
+  const createBarbell = useCallback(async (data: { name: string; weight: number; description?: string; displayOrder?: number; isDefault?: boolean }) => {
     const barbell = await barbellService.create(data);
-    setBarbells((prev) => [...prev, barbell].sort((a, b) => a.name.localeCompare(b.name)));
+    setBarbells((prev) => [...prev, barbell].sort((a, b) => (a.displayOrder ?? 999) - (b.displayOrder ?? 999)));
     return barbell;
   }, []);
 
-  const updateBarbell = useCallback(async (id: string, updates: { name?: string; weight?: number; isDefault?: boolean }) => {
+  const updateBarbell = useCallback(async (id: string, updates: { name?: string; weight?: number; description?: string; displayOrder?: number; isDefault?: boolean }) => {
     const barbell = await barbellService.update(id, updates);
     if (barbell) {
       setBarbells((prev) => prev.map((b) => (b.id === id ? barbell : b)));

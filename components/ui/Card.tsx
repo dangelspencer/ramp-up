@@ -21,8 +21,8 @@ export function Card({ children, className = '', onPress, variant = 'default' }:
         ? 'bg-zinc-800 shadow-lg shadow-black/30'
         : 'bg-white shadow-lg shadow-black/10',
       outlined: isDark
-        ? 'bg-transparent border border-zinc-700'
-        : 'bg-transparent border border-zinc-200',
+        ? 'bg-zinc-800 border border-zinc-700'
+        : 'bg-white border border-zinc-200',
     };
     return variants[variant];
   };

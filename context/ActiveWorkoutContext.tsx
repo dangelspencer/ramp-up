@@ -265,7 +265,7 @@ interface ActiveWorkoutProviderProps {
 
 export function ActiveWorkoutProvider({ children }: ActiveWorkoutProviderProps) {
   const [state, dispatch] = useReducer(activeWorkoutReducer, initialState);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Handle rest timer
   useEffect(() => {

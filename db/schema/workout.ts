@@ -1,5 +1,6 @@
 import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
+import * as Crypto from 'expo-crypto';
 
 import { programs } from './program';
 import { routines } from './routine';
@@ -8,7 +9,7 @@ import { exercises } from './exercise';
 export const workouts = sqliteTable('workouts', {
   id: text('id')
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => Crypto.randomUUID()),
   programId: text('program_id').references(() => programs.id),
   routineId: text('routine_id')
     .notNull()
@@ -23,7 +24,7 @@ export const workouts = sqliteTable('workouts', {
 export const workoutExercises = sqliteTable('workout_exercises', {
   id: text('id')
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => Crypto.randomUUID()),
   workoutId: text('workout_id')
     .notNull()
     .references(() => workouts.id, { onDelete: 'cascade' }),
@@ -36,7 +37,7 @@ export const workoutExercises = sqliteTable('workout_exercises', {
 export const workoutSets = sqliteTable('workout_sets', {
   id: text('id')
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => Crypto.randomUUID()),
   workoutExerciseId: text('workout_exercise_id')
     .notNull()
     .references(() => workoutExercises.id, { onDelete: 'cascade' }),

@@ -50,7 +50,8 @@ export function RestTimer({
     previousSecondsRef.current = remainingSeconds;
   }, [remainingSeconds, isRunning, onComplete]);
 
-  const progress = totalSeconds > 0 ? ((totalSeconds - remainingSeconds) / totalSeconds) * 100 : 0;
+  // Progress starts at 100% (full) and drains to 0% as time passes
+  const progress = totalSeconds > 0 ? (remainingSeconds / totalSeconds) * 100 : 0;
 
   const getSizeConfig = () => {
     const configs = {
@@ -69,7 +70,8 @@ export function RestTimer({
     return 'primary';
   };
 
-  if (!isRunning && remainingSeconds === 0) {
+  // Hide timer when it reaches 0
+  if (remainingSeconds === 0) {
     return null;
   }
 
@@ -158,9 +160,11 @@ export function CompactRestTimer({
   const { effectiveTheme } = useSettings();
   const isDark = effectiveTheme === 'dark';
 
-  const progress = totalSeconds > 0 ? ((totalSeconds - remainingSeconds) / totalSeconds) * 100 : 0;
+  // Progress starts at 100% (full) and drains to 0% as time passes
+  const progress = totalSeconds > 0 ? (remainingSeconds / totalSeconds) * 100 : 0;
 
-  if (!isRunning && remainingSeconds === 0) {
+  // Hide timer when it reaches 0
+  if (remainingSeconds === 0) {
     return null;
   }
 

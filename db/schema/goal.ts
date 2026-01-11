@@ -1,10 +1,11 @@
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
+import * as Crypto from 'expo-crypto';
 
 export const goals = sqliteTable('goals', {
   id: text('id')
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => Crypto.randomUUID()),
   workoutsPerWeek: integer('workouts_per_week').notNull(),
   totalWeeks: integer('total_weeks'), // null for indefinite
   scheduledDays: text('scheduled_days').notNull(), // JSON array: "[0,2,4]" for Mon/Wed/Fri

@@ -15,7 +15,7 @@ import {
 } from '@/db/schema';
 
 export interface RoutineSetInput {
-  weightType: 'percentage' | 'fixed';
+  weightType: 'percentage' | 'fixed' | 'bar';
   weightValue: number;
   reps: number;
   restTime?: number | null;
@@ -42,7 +42,7 @@ export interface RoutineWithDetails extends Routine {
     sets: Array<{
       id: string;
       orderIndex: number;
-      weightType: 'percentage' | 'fixed';
+      weightType: 'percentage' | 'fixed' | 'bar';
       weightValue: number;
       reps: number;
       restTime: number | null;
@@ -112,7 +112,7 @@ export const routineService = {
         sets: sets.map((s) => ({
           id: s.id,
           orderIndex: s.orderIndex,
-          weightType: s.weightType as 'percentage' | 'fixed',
+          weightType: s.weightType as 'percentage' | 'fixed' | 'bar',
           weightValue: s.weightValue,
           reps: s.reps,
           restTime: s.restTime,

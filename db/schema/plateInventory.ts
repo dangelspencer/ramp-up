@@ -1,9 +1,10 @@
 import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import * as Crypto from 'expo-crypto';
 
 export const plateInventory = sqliteTable('plate_inventory', {
   id: text('id')
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => Crypto.randomUUID()),
   weight: real('weight').notNull().unique(), // plate weight in lbs
   count: integer('count').notNull().default(0), // total plates (pairs = count/2)
 });

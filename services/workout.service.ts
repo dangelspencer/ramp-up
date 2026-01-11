@@ -7,6 +7,7 @@ import {
   workoutSets,
   exercises,
   routines,
+  barbells,
   Workout,
   NewWorkout,
   WorkoutSet,
@@ -88,6 +89,18 @@ export const workoutService = {
         })
         .returning();
 
+      // Get barbell weight if exercise uses one
+      let barbellWeight = 45; // Default
+      if (exercise.barbellId) {
+        const barbellResults = await db
+          .select()
+          .from(barbells)
+          .where(eq(barbells.id, exercise.barbellId));
+        if (barbellResults.length > 0) {
+          barbellWeight = barbellResults[0].weight;
+        }
+      }
+
       // Create sets with calculated weights
       for (const set of routineExercise.sets) {
         let targetWeight: number;
@@ -98,9 +111,12 @@ export const workoutService = {
             exercise.maxWeight,
             set.weightValue,
             exercise.weightIncrement,
-            45 // Default bar weight, could be looked up
+            barbellWeight
           );
           percentageOfMax = set.weightValue;
+        } else if (set.weightType === 'bar') {
+          // Just the bar weight, no additional plates
+          targetWeight = exercise.barbellId ? barbellWeight : 0;
         } else {
           targetWeight = set.weightValue;
         }

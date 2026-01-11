@@ -1,12 +1,13 @@
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
+import * as Crypto from 'expo-crypto';
 
 import { routines } from './routine';
 
 export const programs = sqliteTable('programs', {
   id: text('id')
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => Crypto.randomUUID()),
   name: text('name').notNull(),
   type: text('type', { enum: ['continuous', 'finite'] }).notNull(),
   totalWorkouts: integer('total_workouts'), // null for continuous
@@ -24,7 +25,7 @@ export const programs = sqliteTable('programs', {
 export const programRoutines = sqliteTable('program_routines', {
   id: text('id')
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => Crypto.randomUUID()),
   programId: text('program_id')
     .notNull()
     .references(() => programs.id, { onDelete: 'cascade' }),

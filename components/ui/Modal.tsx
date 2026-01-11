@@ -9,6 +9,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSettings } from '@/hooks';
 import { X } from 'lucide-react-native';
 
@@ -33,6 +34,7 @@ export function Modal({
 }: ModalProps) {
   const { effectiveTheme } = useSettings();
   const isDark = effectiveTheme === 'dark';
+  const insets = useSafeAreaInsets();
 
   const getSizeClasses = () => {
     const sizes = {
@@ -99,7 +101,15 @@ export function Modal({
                     )}
                   </View>
                 )}
-                <View className="px-4 pb-4">{children}</View>
+                <ScrollView
+                  className="px-4 pb-4"
+                  style={position === 'bottom' ? { paddingBottom: Math.max(insets.bottom, 16) + 16 } : undefined}
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={false}
+                  bounces={false}
+                >
+                  {children}
+                </ScrollView>
               </View>
             </TouchableWithoutFeedback>
           </View>

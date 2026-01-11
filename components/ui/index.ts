@@ -5,3 +5,5 @@ export { Switch, SwitchGroup } from './Switch';
 export { Modal, ConfirmModal } from './Modal';
 export { ProgressBar, CircularProgress } from './ProgressBar';
 export { Select, SegmentedControl } from './Select';
+export { DraggableList } from './DraggableList';
+export { IconBox } from './IconBox';

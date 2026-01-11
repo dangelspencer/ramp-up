@@ -1,9 +1,10 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useEffect } from 'react';
 import { DatabaseProvider, useDatabase } from './DatabaseContext';
 import { SettingsProvider, useSettings } from './SettingsContext';
 import { ActiveWorkoutProvider, useActiveWorkout } from './ActiveWorkoutContext';
 import { OnboardingProvider, useOnboarding } from './OnboardingContext';
 import { View, Text, ActivityIndicator } from 'react-native';
+import { audio } from '@/utils/audio';
 
 interface AppProviderProps {
   children: ReactNode;
@@ -20,6 +21,13 @@ function LoadingScreen() {
 
 function DatabaseGate({ children }: { children: ReactNode }) {
   const { isReady } = useDatabase();
+
+  // Initialize audio when database is ready
+  useEffect(() => {
+    if (isReady) {
+      audio.initialize();
+    }
+  }, [isReady]);
 
   if (!isReady) {
     return <LoadingScreen />;

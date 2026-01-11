@@ -5,7 +5,7 @@ import { settingsService } from './settings.service';
 // Configure notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowAlert: false,
     shouldPlaySound: true,
     shouldSetBadge: false,
     shouldShowBanner: true,

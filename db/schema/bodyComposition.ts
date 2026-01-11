@@ -1,10 +1,11 @@
 import { sqliteTable, text, real, integer } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
+import * as Crypto from 'expo-crypto';
 
 export const bodyCompositions = sqliteTable('body_compositions', {
   id: text('id')
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => Crypto.randomUUID()),
   date: text('date')
     .default(sql`(datetime('now'))`)
     .notNull(),

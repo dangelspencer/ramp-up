@@ -9,7 +9,7 @@
     "scheme": "rampup",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/adaptive-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#f97316"
     },
@@ -19,7 +19,8 @@
       "infoPlist": {
         "NSHealthShareUsageDescription": "RampUp needs access to read your height from Apple Health.",
         "NSHealthUpdateUsageDescription": "RampUp needs access to write your weight, body fat, and lean mass measurements to Apple Health."
-      }
+      },
+      "appleTeamId": "9TKWG75S2M"
     },
     "android": {
       "adaptiveIcon": {
@@ -33,17 +34,13 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router",
       [
         "expo-notifications",
         {
-          "icon": "./assets/notification-icon.png",
+          "icon": "./assets/icon.png",
           "color": "#f97316"
         }
       ]
-    ],
-    "experiments": {
-      "typedRoutes": true
-    }
+    ]
   }
 }

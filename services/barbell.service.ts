@@ -1,14 +1,14 @@
-import { eq } from 'drizzle-orm';
+import { eq, asc } from 'drizzle-orm';
 
 import { db } from '@/db/client';
 import { barbells, Barbell, NewBarbell } from '@/db/schema';
 
 export const barbellService = {
   /**
-   * Get all barbells
+   * Get all barbells ordered by displayOrder
    */
   async getAll(): Promise<Barbell[]> {
-    return db.select().from(barbells).orderBy(barbells.name);
+    return db.select().from(barbells).orderBy(asc(barbells.displayOrder), asc(barbells.name));
   },
 
   /**

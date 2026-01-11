@@ -1,4 +1,14 @@
 /**
+ * Converts settings units ('imperial' | 'metric') to display labels ('lbs' | 'kg').
+ *
+ * @param units - The settings units value
+ * @returns Display label like "lbs" or "kg"
+ */
+export function getUnitLabel(units: 'imperial' | 'metric' | string): string {
+  return units === 'metric' ? 'kg' : 'lbs';
+}
+
+/**
  * Formats a weight value with appropriate precision.
  * Removes unnecessary decimal places (e.g., 135.0 -> "135").
  *

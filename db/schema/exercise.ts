@@ -1,12 +1,13 @@
 import { sqliteTable, text, real, integer } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
+import * as Crypto from 'expo-crypto';
 
 import { barbells } from './barbell';
 
 export const exercises = sqliteTable('exercises', {
   id: text('id')
     .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
+    .$defaultFn(() => Crypto.randomUUID()),
   name: text('name').notNull(),
   maxWeight: real('max_weight').notNull(), // in lbs
   weightIncrement: real('weight_increment').notNull().default(5), // 2.5 or 5

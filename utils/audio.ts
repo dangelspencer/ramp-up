@@ -1,13 +1,23 @@
-import { Audio } from 'expo-av';
+import { setAudioModeAsync, AudioModule } from 'expo-audio';
+import * as Notifications from 'expo-notifications';
 import { settingsService } from '@/services/settings.service';
+import { Platform } from 'react-native';
 
-// Sound references - loaded on demand
-let timerCompleteSound: Audio.Sound | null = null;
-let tickSound: Audio.Sound | null = null;
+// Configure notification handler
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: false,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+    priority: Notifications.AndroidNotificationPriority.HIGH,
+  }),
+});
 
 /**
  * Audio utilities for workout sounds
- * Respects user's audio settings preference
+ * Uses notifications for reliable background audio alerts
  */
 export const audio = {
   /**
@@ -15,13 +25,28 @@ export const audio = {
    */
   async initialize() {
     try {
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        staysActiveInBackground: false,
-        playsInSilentModeIOS: true,
-        shouldDuckAndroid: true,
-        playThroughEarpieceAndroid: false,
+      await setAudioModeAsync({
+        playsInSilentMode: true,
+        interruptionMode: 'duckOthers',
+        shouldPlayInBackground: true,
       });
+
+      // Request notification permissions for background alerts
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('Notification permissions not granted');
+      }
+
+      // Set up notification channel for Android
+      if (Platform.OS === 'android') {
+        await Notifications.setNotificationChannelAsync('timer', {
+          name: 'Rest Timer',
+          importance: Notifications.AndroidImportance.HIGH,
+          sound: 'default',
+          vibrationPattern: [0, 250, 250, 250],
+          enableVibrate: true,
+        });
+      }
     } catch (error) {
       console.error('Failed to initialize audio:', error);
     }
@@ -29,72 +54,39 @@ export const audio = {
 
   /**
    * Play the rest timer complete sound
+   * Uses notification for reliable background playback
    */
   async playTimerComplete() {
     const settings = await settingsService.getAll();
     if (!settings.restTimerAudio) return;
 
     try {
-      // Unload previous sound if exists
-      if (timerCompleteSound) {
-        await timerCompleteSound.unloadAsync();
-        timerCompleteSound = null;
-      }
-
-      // Create and play new sound
-      // Using a built-in system sound approach - in production you'd bundle a custom sound
-      const { sound } = await Audio.Sound.createAsync(
-        // In production, you would use: require('@/assets/sounds/timer-complete.mp3')
-        // For now, we'll create a simple beep using oscillator (not available in expo-av)
-        // Instead, we rely on the system sound or notification
-        { uri: 'asset:/sounds/timer-complete.mp3' },
-        { shouldPlay: true, volume: 1.0 }
-      );
-      timerCompleteSound = sound;
-
-      // Clean up after playing
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
-          sound.unloadAsync();
-          timerCompleteSound = null;
-        }
+      // Use local notification for reliable sound playback (works in background)
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'Rest Complete',
+          body: 'Time to start your next set!',
+          sound: true,
+          priority: 'high',
+          ...(Platform.OS === 'android' && { channelId: 'timer' }),
+        },
+        trigger: null, // Immediate
       });
     } catch (error) {
-      // Fallback: no sound plays, but no crash
-      console.log('Timer sound not available');
+      console.log('Timer notification failed:', error);
     }
   },
 
   /**
    * Play a countdown tick sound (for last few seconds)
+   * Uses haptics as fallback since ticks are frequent
    */
   async playTick() {
     const settings = await settingsService.getAll();
     if (!settings.restTimerAudio) return;
 
-    try {
-      // Clean up previous tick sound
-      if (tickSound) {
-        await tickSound.unloadAsync();
-        tickSound = null;
-      }
-
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: 'asset:/sounds/tick.mp3' },
-        { shouldPlay: true, volume: 0.5 }
-      );
-      tickSound = sound;
-
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
-          sound.unloadAsync();
-          tickSound = null;
-        }
-      });
-    } catch (error) {
-      // Fallback: no sound plays
-      console.log('Tick sound not available');
-    }
+    // Tick sounds are handled by haptics in RestTimer component
+    // We don't want notification spam for ticks
   },
 
   /**
@@ -105,36 +97,29 @@ export const audio = {
     if (!settings.restTimerAudio) return;
 
     try {
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: 'asset:/sounds/success.mp3' },
-        { shouldPlay: true, volume: 1.0 }
-      );
-
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
-          sound.unloadAsync();
-        }
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'Great Job!',
+          body: 'Workout completed successfully!',
+          sound: true,
+          priority: 'high',
+          ...(Platform.OS === 'android' && { channelId: 'timer' }),
+        },
+        trigger: null,
       });
     } catch (error) {
-      console.log('Success sound not available');
+      console.log('Success notification failed:', error);
     }
   },
 
   /**
-   * Clean up all sounds
+   * Clean up - dismiss any pending notifications
    */
   async cleanup() {
     try {
-      if (timerCompleteSound) {
-        await timerCompleteSound.unloadAsync();
-        timerCompleteSound = null;
-      }
-      if (tickSound) {
-        await tickSound.unloadAsync();
-        tickSound = null;
-      }
+      await Notifications.dismissAllNotificationsAsync();
     } catch (error) {
-      console.error('Failed to cleanup audio:', error);
+      console.error('Failed to cleanup notifications:', error);
     }
   },
 };
