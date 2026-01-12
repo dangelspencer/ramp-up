@@ -56,7 +56,7 @@ export function ProgressBar({
         </View>
       )}
       <View
-        className={`rounded-full overflow-hidden ${getBackgroundClasses()}`}
+        className={`w-full rounded-full overflow-hidden ${getBackgroundClasses()}`}
         style={{ height }}
       >
         <View

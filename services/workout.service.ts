@@ -335,8 +335,24 @@ export const workoutService = {
 
   /**
    * Delete a workout
+   * If the workout was completed and part of a program, decrements the program position
    */
   async delete(id: string): Promise<boolean> {
+    // Get the workout first to check if we need to update program position
+    const workoutResults = await db
+      .select()
+      .from(workouts)
+      .where(eq(workouts.id, id));
+
+    if (workoutResults.length === 0) return false;
+
+    const workout = workoutResults[0];
+
+    // If this was a completed workout in a program, decrement the program position
+    if (workout.programId && workout.completedAt) {
+      await programService.decrementPosition(workout.programId);
+    }
+
     const results = await db.delete(workouts).where(eq(workouts.id, id)).returning();
     return results.length > 0;
   },

@@ -90,7 +90,7 @@ export default function ExerciseCreateScreen() {
     { value: '', label: 'None (bodyweight/dumbbell)' },
     ...barbells.map((b) => ({
       value: b.id,
-      label: `${b.name} (${formatWeight(b.weight, unitLabel)})`,
+      label: `${b.name} (${formatWeight(b.weight, settings.units)})`,
     })),
   ];
 

@@ -3,7 +3,9 @@ import { View, Text, ScrollView, TouchableOpacity, Alert, KeyboardAvoidingView, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ChevronLeft, Plus, Trash2, GripVertical, Play, Copy, Pencil, X } from 'lucide-react-native';
+import { ChevronLeft, Plus, Trash2, GripVertical, Play, Copy, Pencil, X, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react-native';
+import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { RootStackParamList } from '../../App';
 import { useSettings, useRoutine, useRoutines, useExercises } from '@/hooks';
@@ -55,8 +57,11 @@ export default function RoutineDetailScreen() {
   const [showExerciseModal, setShowExerciseModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [showSwapExerciseModal, setShowSwapExerciseModal] = useState(false);
+  const [swappingExerciseId, setSwappingExerciseId] = useState<string | null>(null);
   const [duplicateName, setDuplicateName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedExercises, setExpandedExercises] = useState<Set<string>>(new Set());
 
   // Initialize state from routine data
   useEffect(() => {
@@ -83,6 +88,39 @@ export default function RoutineDetailScreen() {
     e.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const toggleExpanded = useCallback((exerciseId: string) => {
+    setExpandedExercises((prev) => {
+      const next = new Set(prev);
+      if (next.has(exerciseId)) {
+        next.delete(exerciseId);
+      } else {
+        next.add(exerciseId);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleDragEnd = useCallback(({ data }: { data: ExerciseEntry[] }) => {
+    setRoutineExercises(data);
+  }, []);
+
+  const handleSwapExercise = useCallback((exerciseEntryId: string, newExerciseId: string, newExerciseName: string) => {
+    setRoutineExercises((prev) =>
+      prev.map((e) => {
+        if (e.id !== exerciseEntryId) return e;
+        return { ...e, exerciseId: newExerciseId, exerciseName: newExerciseName };
+      })
+    );
+    setShowSwapExerciseModal(false);
+    setSwappingExerciseId(null);
+    setSearchQuery('');
+  }, []);
+
+  const openSwapModal = useCallback((exerciseEntryId: string) => {
+    setSwappingExerciseId(exerciseEntryId);
+    setShowSwapExerciseModal(true);
+  }, []);
+
   const handleAddExercise = useCallback((exerciseId: string, exerciseName: string) => {
     const newExercise: ExerciseEntry = {
       id: generateId(),
@@ -99,6 +137,8 @@ export default function RoutineDetailScreen() {
       ],
     };
     setRoutineExercises((prev) => [...prev, newExercise]);
+    // Auto-expand the newly added exercise
+    setExpandedExercises((prev) => new Set([...prev, newExercise.id]));
     setShowExerciseModal(false);
     setSearchQuery('');
   }, []);
@@ -235,70 +275,248 @@ export default function RoutineDetailScreen() {
     setIsEditing(false);
   };
 
+  const renderEditExerciseItem = useCallback(
+    ({ item: exercise, drag, isActive }: RenderItemParams<ExerciseEntry>) => {
+      const isExpanded = expandedExercises.has(exercise.id);
+
+      return (
+        <ScaleDecorator>
+          <View className="px-4 mb-3" style={{ opacity: isActive ? 0.9 : 1 }}>
+            <Card>
+              {/* Exercise Header */}
+              <View className="flex-row items-center justify-between">
+                <TouchableOpacity
+                  onLongPress={drag}
+                  delayLongPress={100}
+                  className="p-2 -ml-2"
+                >
+                  <GripVertical size={20} color={isDark ? '#71717a' : '#a1a1aa'} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => toggleExpanded(exercise.id)}
+                  className="flex-row items-center flex-1 mr-2"
+                >
+                  <View className="flex-1">
+                    <Text numberOfLines={1} className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                      {exercise.exerciseName}
+                    </Text>
+                    <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                      {exercise.sets.length} set{exercise.sets.length !== 1 ? 's' : ''}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                <View className="flex-row items-center gap-1 shrink-0">
+                  <TouchableOpacity
+                    onPress={() => openSwapModal(exercise.id)}
+                    className="p-2"
+                  >
+                    <RefreshCw size={16} color="#f97316" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => handleRemoveExercise(exercise.id)}
+                    className="p-2"
+                  >
+                    <Trash2 size={16} color="#ef4444" />
+                  </TouchableOpacity>
+                  {isExpanded ? (
+                    <ChevronUp size={20} color={isDark ? '#a1a1aa' : '#71717a'} />
+                  ) : (
+                    <ChevronDown size={20} color={isDark ? '#a1a1aa' : '#71717a'} />
+                  )}
+                </View>
+              </View>
+
+              {/* Sets (Expanded) */}
+              {isExpanded && (
+                <View className={`mt-4 pt-4 border-t ${isDark ? 'border-zinc-700' : 'border-zinc-200'}`}>
+                  {exercise.sets.map((set, setIndex) => (
+                    <View
+                      key={set.id}
+                      className={`py-3 ${setIndex > 0 ? `border-t ${isDark ? 'border-zinc-700' : 'border-zinc-200'}` : ''}`}
+                    >
+                      <View className="flex-row items-center justify-between mb-2">
+                        <Text className={`text-sm font-medium ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                          Set {setIndex + 1}
+                        </Text>
+                        {exercise.sets.length > 1 && (
+                          <TouchableOpacity
+                            onPress={() => handleRemoveSet(exercise.id, set.id)}
+                            className="p-1"
+                          >
+                            <Trash2 size={14} color={isDark ? '#71717a' : '#a1a1aa'} />
+                          </TouchableOpacity>
+                        )}
+                      </View>
+
+                      <SegmentedControl
+                        value={set.weightType}
+                        onValueChange={(value) =>
+                          handleUpdateSet(exercise.id, set.id, {
+                            weightType: value as 'percentage' | 'fixed' | 'bar',
+                          })
+                        }
+                        options={[
+                          { value: 'percentage', label: '% of Max' },
+                          { value: 'fixed', label: 'Fixed' },
+                          { value: 'bar', label: 'Bar Only' },
+                        ]}
+                        isDark={isDark}
+                        className="mb-3"
+                      />
+
+                      <View className="flex-row gap-3">
+                        {set.weightType !== 'bar' && (
+                          <View className="flex-1">
+                            <NumberInput
+                              label={set.weightType === 'percentage' ? 'Percentage' : 'Weight'}
+                              value={set.weightValue}
+                              onChangeValue={(v) =>
+                                handleUpdateSet(exercise.id, set.id, { weightValue: v ?? 0 })
+                              }
+                              min={0}
+                              max={set.weightType === 'percentage' ? 100 : 999}
+                              suffix={set.weightType === 'percentage' ? '%' : settings.units === 'imperial' ? 'lbs' : 'kg'}
+                              isDark={isDark}
+                            />
+                          </View>
+                        )}
+                        <View className="flex-1">
+                          <NumberInput
+                            label="Reps"
+                            value={set.reps}
+                            onChangeValue={(v) =>
+                              handleUpdateSet(exercise.id, set.id, { reps: v ?? 1 })
+                            }
+                            min={1}
+                            max={100}
+                            isDark={isDark}
+                          />
+                        </View>
+                        <View className="flex-1">
+                          <NumberInput
+                            label="Rest (sec)"
+                            value={set.restTime}
+                            onChangeValue={(v) =>
+                              handleUpdateSet(exercise.id, set.id, { restTime: v })
+                            }
+                            min={0}
+                            max={600}
+                            isDark={isDark}
+                          />
+                        </View>
+                      </View>
+                    </View>
+                  ))}
+
+                  <TouchableOpacity
+                    onPress={() => handleAddSet(exercise.id)}
+                    className={`mt-2 py-2 rounded-lg border border-dashed ${isDark ? 'border-zinc-700' : 'border-zinc-300'}`}
+                  >
+                    <Text className={`text-center text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                      + Add Set
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </Card>
+          </View>
+        </ScaleDecorator>
+      );
+    },
+    [expandedExercises, isDark, settings.units, toggleExpanded, handleRemoveExercise, handleRemoveSet, handleUpdateSet, handleAddSet, openSwapModal]
+  );
+
+  const EditListFooter = useCallback(
+    () => (
+      <View className="px-4">
+        <TouchableOpacity
+          onPress={() => setShowExerciseModal(true)}
+          className={`py-4 rounded-xl border-2 border-dashed ${isDark ? 'border-zinc-700' : 'border-zinc-300'}`}
+        >
+          <View className="flex-row items-center justify-center gap-2">
+            <Plus size={20} color={isDark ? '#71717a' : '#a1a1aa'} />
+            <Text className={`font-medium ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+              Add Exercise
+            </Text>
+          </View>
+        </TouchableOpacity>
+        <View className="h-8" />
+      </View>
+    ),
+    [isDark]
+  );
+
   if (isLoading) {
     return (
-      <SafeAreaView className="flex-1" style={{ backgroundColor: isDark ? '#09090b' : '#f4f4f5' }}>
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#f97316" />
-        </View>
-      </SafeAreaView>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaView className="flex-1" style={{ backgroundColor: isDark ? '#09090b' : '#f4f4f5' }}>
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator size="large" color="#f97316" />
+          </View>
+        </SafeAreaView>
+      </GestureHandlerRootView>
     );
   }
 
   if (!routine) {
     return (
-      <SafeAreaView className="flex-1" style={{ backgroundColor: isDark ? '#09090b' : '#f4f4f5' }}>
-        <View className="flex-1 items-center justify-center">
-          <Text className={isDark ? 'text-zinc-400' : 'text-zinc-500'}>Routine not found</Text>
-          <Button onPress={() => navigation.goBack()} variant="outline" className="mt-4">
-            Go Back
-          </Button>
-        </View>
-      </SafeAreaView>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaView className="flex-1" style={{ backgroundColor: isDark ? '#09090b' : '#f4f4f5' }}>
+          <View className="flex-1 items-center justify-center">
+            <Text className={isDark ? 'text-zinc-400' : 'text-zinc-500'}>Routine not found</Text>
+            <Button onPress={() => navigation.goBack()} variant="outline" className="mt-4">
+              Go Back
+            </Button>
+          </View>
+        </SafeAreaView>
+      </GestureHandlerRootView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: isDark ? '#09090b' : '#f4f4f5' }}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
-      >
-        {/* Header */}
-        <View className="px-4 py-3">
-          <View className="flex-row items-center justify-between">
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              className={`p-2 rounded-lg ${isDark ? 'bg-zinc-800' : 'bg-white'}`}
-            >
-              <ChevronLeft size={24} color={isDark ? '#ffffff' : '#18181b'} />
-            </TouchableOpacity>
-            <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-              {isEditing ? 'Edit Routine' : 'Routine Details'}
-            </Text>
-            {isEditing ? (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView className="flex-1" style={{ backgroundColor: isDark ? '#09090b' : '#f4f4f5' }}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          className="flex-1"
+        >
+          {/* Header */}
+          <View className="px-4 py-3">
+            <View className="flex-row items-center justify-between">
               <TouchableOpacity
-                onPress={handleCancelEdit}
+                onPress={() => navigation.goBack()}
                 className={`p-2 rounded-lg ${isDark ? 'bg-zinc-800' : 'bg-white'}`}
               >
-                <X size={24} color={isDark ? '#ffffff' : '#18181b'} />
+                <ChevronLeft size={24} color={isDark ? '#ffffff' : '#18181b'} />
               </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                onPress={() => setIsEditing(true)}
-                className="p-2 rounded-lg bg-orange-500"
-              >
-                <Pencil size={20} color="#ffffff" />
-              </TouchableOpacity>
-            )}
+              <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                {isEditing ? 'Edit Routine' : 'Routine Details'}
+              </Text>
+              {isEditing ? (
+                <TouchableOpacity
+                  onPress={handleCancelEdit}
+                  className={`p-2 rounded-lg ${isDark ? 'bg-zinc-800' : 'bg-white'}`}
+                >
+                  <X size={24} color={isDark ? '#ffffff' : '#18181b'} />
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => setIsEditing(true)}
+                  className="p-2 rounded-lg bg-orange-500"
+                >
+                  <Pencil size={20} color="#ffffff" />
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
-        </View>
 
-        <ScrollView className="flex-1 px-4">
           {isEditing ? (
             // Edit Mode
             <>
-              <View className="mt-4">
+              {/* Routine Name - Outside DraggableFlatList for keyboard handling */}
+              <View className="px-4 mb-4">
                 <Input
                   label="Routine Name"
                   value={name}
@@ -307,134 +525,27 @@ export default function RoutineDetailScreen() {
                 />
               </View>
 
-              <View className="mt-6">
-                <Text className={`text-sm font-medium mb-2 ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
-                  Exercises
+              <View className="px-4 mb-2">
+                <Text className={`text-sm font-medium ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
+                  Exercises (drag to reorder)
                 </Text>
-
-                {routineExercises.map((exercise, exerciseIndex) => (
-                  <Card key={exercise.id} className="mb-4">
-                    <View className="flex-row items-center justify-between mb-3">
-                      <View className="flex-row items-center gap-2">
-                        <GripVertical size={18} color={isDark ? '#71717a' : '#a1a1aa'} />
-                        <Text className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-                          {exercise.exerciseName}
-                        </Text>
-                      </View>
-                      <TouchableOpacity
-                        onPress={() => handleRemoveExercise(exercise.id)}
-                        className="p-1"
-                      >
-                        <Trash2 size={18} color="#ef4444" />
-                      </TouchableOpacity>
-                    </View>
-
-                    {exercise.sets.map((set, setIndex) => (
-                      <View
-                        key={set.id}
-                        className={`py-3 ${setIndex > 0 ? `border-t ${isDark ? 'border-zinc-700' : 'border-zinc-200'}` : ''}`}
-                      >
-                        <View className="flex-row items-center justify-between mb-2">
-                          <Text className={`text-sm font-medium ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                            Set {setIndex + 1}
-                          </Text>
-                          {exercise.sets.length > 1 && (
-                            <TouchableOpacity
-                              onPress={() => handleRemoveSet(exercise.id, set.id)}
-                              className="p-1"
-                            >
-                              <Trash2 size={14} color={isDark ? '#71717a' : '#a1a1aa'} />
-                            </TouchableOpacity>
-                          )}
-                        </View>
-
-                        <SegmentedControl
-                          value={set.weightType}
-                          onValueChange={(value) =>
-                            handleUpdateSet(exercise.id, set.id, {
-                              weightType: value as 'percentage' | 'fixed' | 'bar',
-                            })
-                          }
-                          options={[
-                            { value: 'percentage', label: '% of Max' },
-                            { value: 'fixed', label: 'Fixed' },
-                            { value: 'bar', label: 'Bar Only' },
-                          ]}
-                          isDark={isDark}
-                          className="mb-3"
-                        />
-
-                        <View className="flex-row gap-3">
-                          {set.weightType !== 'bar' && (
-                            <View className="flex-1">
-                              <NumberInput
-                                label={set.weightType === 'percentage' ? 'Percentage' : 'Weight'}
-                                value={set.weightValue}
-                                onChangeValue={(v) =>
-                                  handleUpdateSet(exercise.id, set.id, { weightValue: v ?? 0 })
-                                }
-                                min={0}
-                                max={set.weightType === 'percentage' ? 100 : 999}
-                                suffix={set.weightType === 'percentage' ? '%' : settings.units === 'imperial' ? 'lbs' : 'kg'}
-                                isDark={isDark}
-                              />
-                            </View>
-                          )}
-                          <View className="flex-1">
-                            <NumberInput
-                              label="Reps"
-                              value={set.reps}
-                              onChangeValue={(v) =>
-                                handleUpdateSet(exercise.id, set.id, { reps: v ?? 1 })
-                              }
-                              min={1}
-                              max={100}
-                              isDark={isDark}
-                            />
-                          </View>
-                          <View className="flex-1">
-                            <NumberInput
-                              label="Rest (sec)"
-                              value={set.restTime}
-                              onChangeValue={(v) =>
-                                handleUpdateSet(exercise.id, set.id, { restTime: v })
-                              }
-                              min={0}
-                              max={600}
-                              isDark={isDark}
-                            />
-                          </View>
-                        </View>
-                      </View>
-                    ))}
-
-                    <TouchableOpacity
-                      onPress={() => handleAddSet(exercise.id)}
-                      className={`mt-2 py-2 rounded-lg border border-dashed ${isDark ? 'border-zinc-700' : 'border-zinc-300'}`}
-                    >
-                      <Text className={`text-center text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                        + Add Set
-                      </Text>
-                    </TouchableOpacity>
-                  </Card>
-                ))}
-
-                <TouchableOpacity
-                  onPress={() => setShowExerciseModal(true)}
-                  className={`py-4 rounded-xl border-2 border-dashed ${isDark ? 'border-zinc-700' : 'border-zinc-300'}`}
-                >
-                  <View className="flex-row items-center justify-center gap-2">
-                    <Plus size={20} color={isDark ? '#71717a' : '#a1a1aa'} />
-                    <Text className={`font-medium ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                      Add Exercise
-                    </Text>
-                  </View>
-                </TouchableOpacity>
               </View>
+
+              <DraggableFlatList
+                data={routineExercises}
+                renderItem={renderEditExerciseItem}
+                keyExtractor={(item) => item.id}
+                onDragEnd={handleDragEnd}
+                ListFooterComponent={EditListFooter}
+                showsVerticalScrollIndicator={false}
+                containerStyle={{ flex: 1 }}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
+              />
             </>
           ) : (
             // View Mode
-            <>
+            <ScrollView className="flex-1 px-4">
               <View className="mt-4">
                 <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
                   {routine.name}
@@ -503,7 +614,7 @@ export default function RoutineDetailScreen() {
                             ? `${set.weightValue}%`
                             : set.weightType === 'bar'
                             ? 'Bar only'
-                            : formatWeight(set.weightValue, settings.units === 'imperial' ? 'lbs' : 'kg')}{' '}
+                            : formatWeight(set.weightValue, settings.units)}{' '}
                           x {set.reps} reps
                         </Text>
                       </View>
@@ -511,13 +622,12 @@ export default function RoutineDetailScreen() {
                   </Card>
                 ))}
               </View>
-            </>
+
+              <View className="h-8" />
+            </ScrollView>
           )}
 
-          <View className="h-8" />
-        </ScrollView>
-
-        {/* Bottom Button */}
+          {/* Bottom Button */}
         <View className={`px-4 py-4 border-t ${isDark ? 'border-zinc-800' : 'border-zinc-200'}`}>
           {isEditing ? (
             <Button
@@ -615,7 +725,54 @@ export default function RoutineDetailScreen() {
             </Button>
           </View>
         </Modal>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+
+        {/* Swap Exercise Modal */}
+        <Modal
+          visible={showSwapExerciseModal}
+          onClose={() => {
+            setShowSwapExerciseModal(false);
+            setSwappingExerciseId(null);
+            setSearchQuery('');
+          }}
+          title="Change Exercise"
+          position="bottom"
+          size="full"
+        >
+          <Text className={`text-sm mb-3 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+            Select a new exercise. Your sets will be kept.
+          </Text>
+          <Input
+            placeholder="Search exercises..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            containerClassName="mb-4"
+          />
+          <ScrollView className="max-h-80">
+            {filteredExercises.length === 0 ? (
+              <Text className={`text-center py-4 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                No exercises found
+              </Text>
+            ) : (
+              filteredExercises.map((exercise) => (
+                <TouchableOpacity
+                  key={exercise.id}
+                  onPress={() => {
+                    if (swappingExerciseId) {
+                      handleSwapExercise(swappingExerciseId, exercise.id, exercise.name);
+                    }
+                  }}
+                  className={`py-3 border-b ${isDark ? 'border-zinc-800' : 'border-zinc-100'}`}
+                >
+                  <Text className={`font-medium ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                    {exercise.name}
+                  </Text>
+                </TouchableOpacity>
+              ))
+            )}
+          </ScrollView>
+        </Modal>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 }

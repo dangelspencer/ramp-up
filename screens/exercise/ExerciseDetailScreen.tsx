@@ -154,7 +154,7 @@ export default function ExerciseDetailScreen() {
     { value: '', label: 'None (bodyweight/dumbbell)' },
     ...barbells.map((b) => ({
       value: b.id,
-      label: `${b.name} (${formatWeight(b.weight, unitLabel)})`,
+      label: `${b.name} (${formatWeight(b.weight, settings.units)})`,
     })),
   ];
 
@@ -324,7 +324,7 @@ export default function ExerciseDetailScreen() {
                   <View className="items-center">
                     <TrendingUp size={20} color="#f97316" />
                     <Text className={`text-2xl font-bold mt-2 ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-                      {formatWeight(displayMaxWeight, unitLabel)}
+                      {formatWeight(displayMaxWeight, settings.units)}
                     </Text>
                     <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
                       Max Weight
@@ -336,7 +336,7 @@ export default function ExerciseDetailScreen() {
                   <View className="items-center">
                     <TrendingUp size={20} color="#22c55e" />
                     <Text className={`text-2xl font-bold mt-2 ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-                      +{formatWeight(displayIncrement, unitLabel)}
+                      +{formatWeight(displayIncrement, settings.units)}
                     </Text>
                     <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
                       Increment
@@ -374,7 +374,7 @@ export default function ExerciseDetailScreen() {
                         {exercise.barbell.name}
                       </Text>
                       <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                        Bar weight: {formatWeight(exercise.barbell.weight, unitLabel)}
+                        Bar weight: {formatWeight(exercise.barbell.weight, settings.units)}
                       </Text>
                     </View>
                   </View>
@@ -385,7 +385,7 @@ export default function ExerciseDetailScreen() {
               <Card variant="outlined" className="mb-6">
                 <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
                   {exercise.autoProgression
-                    ? `When you successfully complete all sets at ${formatWeight(displayMaxWeight, unitLabel)}, the weight will automatically increase to ${formatWeight(displayMaxWeight + displayIncrement, unitLabel)}.`
+                    ? `When you successfully complete all sets at ${formatWeight(displayMaxWeight, settings.units)}, the weight will automatically increase to ${formatWeight(displayMaxWeight + displayIncrement, settings.units)}.`
                     : 'Auto progression is disabled. Update the max weight manually when you are ready to progress.'}
                 </Text>
               </Card>

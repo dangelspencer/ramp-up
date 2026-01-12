@@ -72,7 +72,7 @@ export function Modal({
         className="flex-1"
       >
         <TouchableWithoutFeedback onPress={onClose}>
-          <View className={`flex-1 ${getPositionClasses()} bg-black/50`}>
+          <View className={`flex-1 items-center ${getPositionClasses()} bg-black/50`}>
             <TouchableWithoutFeedback>
               <View
                 className={`
@@ -147,31 +147,33 @@ export function ConfirmModal({
 
   return (
     <Modal visible={visible} onClose={onClose} showCloseButton={false} size="sm">
-      <Text className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-        {title}
-      </Text>
-      <Text className={`mb-4 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>{message}</Text>
-      <View className="flex-row gap-3">
-        <TouchableOpacity
-          onPress={onClose}
-          className={`flex-1 py-3 rounded-lg items-center ${
-            isDark ? 'bg-zinc-800' : 'bg-zinc-100'
-          }`}
-          disabled={loading}
-        >
-          <Text className={`font-medium ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-            {cancelText}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={onConfirm}
-          className={`flex-1 py-3 rounded-lg items-center ${
-            variant === 'destructive' ? 'bg-red-500' : 'bg-orange-500'
-          }`}
-          disabled={loading}
-        >
-          <Text className="text-white font-medium">{confirmText}</Text>
-        </TouchableOpacity>
+      <View className="p-4">
+        <Text className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+          {title}
+        </Text>
+        <Text className={`mb-4 ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>{message}</Text>
+        <View className="flex-row gap-3">
+          <TouchableOpacity
+            onPress={onClose}
+            className={`flex-1 py-3 rounded-lg items-center ${
+              isDark ? 'bg-zinc-800' : 'bg-zinc-100'
+            }`}
+            disabled={loading}
+          >
+            <Text className={`font-medium ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+              {cancelText}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={onConfirm}
+            className={`flex-1 py-3 rounded-lg items-center ${
+              variant === 'destructive' ? 'bg-red-500' : 'bg-orange-500'
+            }`}
+            disabled={loading}
+          >
+            <Text className="text-white font-medium">{confirmText}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </Modal>
   );

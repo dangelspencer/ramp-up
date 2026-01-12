@@ -208,6 +208,42 @@ export const programService = {
   },
 
   /**
+   * Decrement the program position (e.g., when a workout is deleted)
+   * Returns the new current position
+   */
+  async decrementPosition(id: string): Promise<number> {
+    const program = await this.getByIdWithRoutines(id);
+    if (!program) return 0;
+
+    const currentPosition = program.currentPosition ?? 0;
+    if (currentPosition <= 0) return 0;
+
+    const newPosition = currentPosition - 1;
+
+    // If the program was marked complete, un-complete it
+    const updates: { currentPosition: number; updatedAt: string; completedAt?: null; isActive?: boolean } = {
+      currentPosition: newPosition,
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (program.completedAt) {
+      updates.completedAt = null;
+      // Optionally reactivate the program if there's no other active program
+      const activeProgram = await this.getActive();
+      if (!activeProgram) {
+        updates.isActive = true;
+      }
+    }
+
+    await db
+      .update(programs)
+      .set(updates)
+      .where(eq(programs.id, id));
+
+    return newPosition;
+  },
+
+  /**
    * Get the next routine ID for the program based on current position
    */
   async getNextRoutineId(id: string): Promise<string | undefined> {

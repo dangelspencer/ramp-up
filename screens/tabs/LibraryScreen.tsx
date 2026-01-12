@@ -69,7 +69,7 @@ export default function LibraryScreen() {
       refreshPrograms();
       refreshRoutines();
       refreshExercises();
-    }, [refreshPrograms, refreshRoutines, refreshExercises])
+    }, [])
   );
 
   const isLoading =
@@ -140,9 +140,9 @@ export default function LibraryScreen() {
     if (program.type === 'continuous') {
       return 'Continuous';
     }
-    const position = (program.currentPosition ?? 0) + 1;
+    const completedWorkouts = program.currentPosition ?? 0;
     const total = program.totalWorkouts ?? 0;
-    return `${position} / ${total} workouts`;
+    return `${completedWorkouts} / ${total} workouts`;
   };
 
   const renderProgramsList = () => {
@@ -194,18 +194,18 @@ export default function LibraryScreen() {
                 <Target size={20} color={isActive ? '#ffffff' : isDark ? '#a1a1aa' : '#71717a'} />
               )}
             </IconBox>
-            <View className="flex-1">
+            <View className="flex-1 mr-2">
               <View className="flex-row items-center gap-2">
-                <Text className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                <Text numberOfLines={1} className={`flex-1 font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
                   {program.name}
                 </Text>
                 {isActive && (
-                  <View className="px-2 py-0.5 rounded-full bg-green-500/20">
+                  <View className="px-2 py-0.5 rounded-full bg-green-500/20 shrink-0">
                     <Text className="text-xs font-medium text-green-500">ACTIVE</Text>
                   </View>
                 )}
                 {isCompleted && (
-                  <View className="flex-row items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-500/20">
+                  <View className="flex-row items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-500/20 shrink-0">
                     <Check size={12} color={isDark ? '#a1a1aa' : '#71717a'} />
                     <Text className={`text-xs font-medium ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
                       Done
@@ -274,8 +274,8 @@ export default function LibraryScreen() {
           <IconBox variant={isDark ? 'muted-dark' : 'muted'} className="mr-3">
             <Dumbbell size={20} color={isDark ? '#a1a1aa' : '#71717a'} />
           </IconBox>
-          <View className="flex-1">
-            <Text className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+          <View className="flex-1 mr-2">
+            <Text numberOfLines={1} className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
               {routine.name}
             </Text>
             <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
@@ -325,17 +325,17 @@ export default function LibraryScreen() {
           <IconBox variant={isDark ? 'muted-dark' : 'muted'} className="mr-3">
             <Dumbbell size={20} color={isDark ? '#a1a1aa' : '#71717a'} />
           </IconBox>
-          <View className="flex-1">
-            <Text className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+          <View className="flex-1 mr-2">
+            <Text numberOfLines={1} className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
               {exercise.name}
             </Text>
             <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-              Max: {formatWeight(exercise.maxWeight, unitLabel)} | +
-              {formatWeight(exercise.weightIncrement, unitLabel)}
+              Max: {formatWeight(exercise.maxWeight, settings.units)} | +
+              {formatWeight(exercise.weightIncrement, settings.units)}
             </Text>
           </View>
           {exercise.autoProgression && (
-            <View className="bg-green-500/20 px-2 py-1 rounded-full mr-2">
+            <View className="bg-green-500/20 px-2 py-1 rounded-full mr-2 shrink-0">
               <Text className="text-green-500 text-xs">Auto</Text>
             </View>
           )}

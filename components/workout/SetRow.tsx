@@ -13,6 +13,7 @@ interface SetRowProps {
   completed: boolean;
   percentageOfMax: number | null;
   onLogPress: () => void;
+  onRowPress?: () => void;
   disabled?: boolean;
 }
 
@@ -25,6 +26,7 @@ export function SetRow({
   completed,
   percentageOfMax,
   onLogPress,
+  onRowPress,
   disabled = false,
 }: SetRowProps) {
   const { effectiveTheme, settings } = useSettings();
@@ -32,10 +34,12 @@ export function SetRow({
 
   const displayWeight = completed ? (actualWeight ?? targetWeight) : targetWeight;
   const displayReps = completed ? (actualReps ?? targetReps) : targetReps;
-  const unitLabel = settings.units === 'metric' ? 'kg' : 'lbs';
 
   return (
-    <View
+    <TouchableOpacity
+      onPress={onRowPress}
+      disabled={!onRowPress}
+      activeOpacity={onRowPress ? 0.7 : 1}
       className={`
         flex-row items-center p-4 rounded-xl
         ${completed
@@ -69,18 +73,24 @@ export function SetRow({
 
       {/* Log Button or Completed Indicator */}
       {completed ? (
-        <View className="w-10 h-10 rounded-full bg-green-500 items-center justify-center">
+        <TouchableOpacity
+          onPress={onRowPress}
+          className="w-10 h-10 rounded-full bg-green-500 items-center justify-center"
+        >
           <Check size={20} color="#ffffff" />
-        </View>
+        </TouchableOpacity>
       ) : (
         <TouchableOpacity
-          onPress={onLogPress}
+          onPress={(e) => {
+            e.stopPropagation();
+            onLogPress();
+          }}
           disabled={disabled}
           className="px-4 py-2 rounded-lg bg-orange-500"
         >
           <Text className="text-white font-semibold">Log</Text>
         </TouchableOpacity>
       )}
-    </View>
+    </TouchableOpacity>
   );
 }

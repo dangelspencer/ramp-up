@@ -105,7 +105,7 @@ export default function BodyCompLogScreen() {
               value={weight}
               onChangeValue={setWeight}
               placeholder="Enter weight"
-              suffix={settings.units}
+              suffix={settings.units === 'imperial' ? 'lbs' : 'kg'}
               allowDecimals
               min={50}
               max={500}

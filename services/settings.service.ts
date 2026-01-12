@@ -17,6 +17,7 @@ export interface AppSettings {
   defaultRestTime: number;
   notificationsEnabled: boolean;
   workoutRemindersEnabled: boolean;
+  workoutReminderTime: string;
   measurementRemindersEnabled: boolean;
   measurementReminderFrequency: MeasurementFrequency;
   measurementReminderTime: string;
@@ -81,6 +82,7 @@ export const settingsService = {
       defaultRestTime: parseNumber(getValue('defaultRestTime')),
       notificationsEnabled: parseBoolean(getValue('notificationsEnabled')),
       workoutRemindersEnabled: parseBoolean(getValue('workoutRemindersEnabled')),
+      workoutReminderTime: getValue('workoutReminderTime'),
       measurementRemindersEnabled: parseBoolean(getValue('measurementRemindersEnabled')),
       measurementReminderFrequency: getValue('measurementReminderFrequency') as MeasurementFrequency,
       measurementReminderTime: getValue('measurementReminderTime'),

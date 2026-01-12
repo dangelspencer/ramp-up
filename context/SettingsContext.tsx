@@ -19,6 +19,7 @@ const defaultSettings: AppSettings = {
   defaultRestTime: 90,
   notificationsEnabled: true,
   workoutRemindersEnabled: true,
+  workoutReminderTime: '18:00',
   measurementRemindersEnabled: false,
   measurementReminderFrequency: 'weekly',
   measurementReminderTime: '08:00',

@@ -1,5 +1,21 @@
 import { db } from './client';
-import { barbells, plateInventory, settings, defaultSettings } from './schema';
+import {
+  barbells,
+  plateInventory,
+  settings,
+  defaultSettings,
+  workoutSets,
+  workoutExercises,
+  workouts,
+  routineExerciseSets,
+  routineExercises,
+  routines,
+  programRoutines,
+  programs,
+  exercises,
+  goals,
+  bodyCompositions,
+} from './schema';
 
 /**
  * Default barbells to seed on first app launch
@@ -60,11 +76,45 @@ export async function seedDatabase() {
  * Use with caution - this is irreversible!
  */
 export async function clearDatabase() {
-  // Tables are cleared in reverse order of dependencies
-  await db.delete(settings);
-  await db.delete(plateInventory);
+  // Delete in order of dependencies (children first)
+  // Workout-related tables
+  await db.delete(workoutSets);
+  await db.delete(workoutExercises);
+  await db.delete(workouts);
+
+  // Routine-related tables
+  await db.delete(routineExerciseSets);
+  await db.delete(routineExercises);
+
+  // Program-related tables
+  await db.delete(programRoutines);
+  await db.delete(programs);
+
+  // Routines (after routine_exercises and program_routines are gone)
+  await db.delete(routines);
+
+  // Exercises (after routine_exercises and workout_exercises are gone)
+  await db.delete(exercises);
+
+  // Standalone tables
+  await db.delete(goals);
+  await db.delete(bodyCompositions);
+
+  // Equipment tables
   await db.delete(barbells);
-  // Note: Other tables will cascade delete through foreign keys
+  await db.delete(plateInventory);
+
+  // Settings (last)
+  await db.delete(settings);
+}
+
+/**
+ * Resets all app data: clears database, re-seeds defaults.
+ * Used for "Clear All Data" in settings.
+ */
+export async function resetAllData() {
+  await clearDatabase();
+  await seedDatabase();
 }
 
 // Export defaults for use in UI (descriptions, etc.)

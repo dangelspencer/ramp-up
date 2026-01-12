@@ -16,10 +16,10 @@ export function getUnitLabel(units: 'imperial' | 'metric' | string): string {
  * @param unit - The unit label (default: "lbs")
  * @returns Formatted string like "135 lbs" or "132.5 lbs"
  */
-export function formatWeight(weight: number, unit: string = 'lbs'): string {
+export function formatWeight(weight: number, unit: 'imperial' | 'metric'): string {
   // If the weight is a whole number, don't show decimals
   const formatted = weight % 1 === 0 ? weight.toString() : weight.toFixed(1);
-  return `${formatted} ${unit}`;
+  return `${formatted} ${unit === 'imperial' ? 'lbs' : 'kg'}`;
 }
 
 /**
@@ -63,7 +63,7 @@ export function formatWeightWithPercentage(
 export function formatSetWeight(
   weight: number,
   percentage: number | null,
-  unit: string = 'lbs'
+  unit: 'imperial' | 'metric'
 ): string {
   if (percentage !== null) {
     return formatWeightWithPercentage(weight, percentage, unit);

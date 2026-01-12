@@ -26,11 +26,11 @@ interface EntryRowProps {
   entry: BodyComposition;
   previousEntry: BodyComposition | null;
   isDark: boolean;
-  units: string;
   onDelete: (id: string) => void;
 }
 
-function EntryRow({ entry, previousEntry, isDark, units, onDelete }: EntryRowProps) {
+function EntryRow({ entry, previousEntry, isDark, onDelete }: EntryRowProps) {
+  const { settings } = useSettings();
   const weightChange = previousEntry ? entry.weight - previousEntry.weight : null;
   const bodyFatChange =
     previousEntry && entry.bodyFatPercent && previousEntry.bodyFatPercent
@@ -60,7 +60,7 @@ function EntryRow({ entry, previousEntry, isDark, units, onDelete }: EntryRowPro
           <Text className={`text-xs ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Weight</Text>
           <View className="flex-row items-baseline gap-1">
             <Text className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-              {formatWeight(entry.weight, units)}
+              {formatWeight(entry.weight, settings.units)}
             </Text>
             {weightChange !== null && weightChange !== 0 && (
               <View className="flex-row items-center">

@@ -33,7 +33,7 @@ function createHealthService(): HealthService {
     let AppleHealthKit: typeof import('react-native-health').default;
     let HealthPermission: typeof import('react-native-health').HealthPermission;
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+       
       const healthKit = require('react-native-health');
       AppleHealthKit = healthKit.default;
       HealthPermission = healthKit.HealthPermission;

@@ -33,6 +33,7 @@ import CompleteScreen from '@/screens/onboarding/CompleteScreen';
 // Other Screens
 import WorkoutScreen from '@/screens/workout/WorkoutScreen';
 import WorkoutCompleteScreen from '@/screens/workout/WorkoutCompleteScreen';
+import WorkoutDetailScreen from '@/screens/workout/WorkoutDetailScreen';
 import RoutineCreateScreen from '@/screens/routine/RoutineCreateScreen';
 import RoutineDetailScreen from '@/screens/routine/RoutineDetailScreen';
 import RoutineSelectScreen from '@/screens/routine/RoutineSelectScreen';
@@ -50,8 +51,9 @@ import SettingsGoalScreen from '@/screens/settings/SettingsGoalScreen';
 export type RootStackParamList = {
   Main: undefined;
   Onboarding: undefined;
-  Workout: { routineId: string };
+  Workout: { routineId: string; programId?: string };
   WorkoutComplete: undefined;
+  WorkoutDetail: { id: string };
   RoutineCreate: undefined;
   RoutineDetail: { id: string };
   RoutineSelect: undefined;
@@ -200,6 +202,7 @@ function RootNavigator() {
         options={{ presentation: 'fullScreenModal' }}
       />
       <Stack.Screen name="WorkoutComplete" component={WorkoutCompleteScreen} />
+      <Stack.Screen name="WorkoutDetail" component={WorkoutDetailScreen} />
       <Stack.Screen name="RoutineCreate" component={RoutineCreateScreen} />
       <Stack.Screen name="RoutineDetail" component={RoutineDetailScreen} />
       <Stack.Screen name="RoutineSelect" component={RoutineSelectScreen} />

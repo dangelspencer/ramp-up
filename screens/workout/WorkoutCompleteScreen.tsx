@@ -120,7 +120,7 @@ export default function WorkoutCompleteScreen() {
               Total Volume
             </Text>
             <Text className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-              {formatWeight(totalVolume, settings.units === 'imperial' ? 'lbs' : 'kg')}
+              {formatWeight(totalVolume, settings.units)}
             </Text>
           </View>
         </Card>
@@ -146,11 +146,11 @@ export default function WorkoutCompleteScreen() {
                   </Text>
                   <View className="flex-row items-center mt-1">
                     <Text className={`${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                      {formatWeight(result.previousMax, settings.units === 'imperial' ? 'lbs' : 'kg')}
+                      {formatWeight(result.previousMax, settings.units)}
                     </Text>
                     <TrendingUp size={16} color="#22c55e" className="mx-2" />
                     <Text className="text-green-500 font-semibold">
-                      {formatWeight(result.newMax, settings.units === 'imperial' ? 'lbs' : 'kg')}
+                      {formatWeight(result.newMax, settings.units)}
                     </Text>
                   </View>
                 </View>
@@ -196,7 +196,7 @@ export default function WorkoutCompleteScreen() {
                   </View>
                   {maxWeight > 0 && (
                     <Text className={`text-sm mt-1 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                      Top weight: {formatWeight(maxWeight, settings.units === 'imperial' ? 'lbs' : 'kg')}
+                      Top weight: {formatWeight(maxWeight, settings.units)}
                     </Text>
                   )}
                 </View>

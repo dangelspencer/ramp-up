@@ -335,34 +335,13 @@ export default function RoutineScreen() {
   const ListHeader = useCallback(
     () => (
       <View className="px-6">
-        <View className="items-center mb-10">
-          <IconBox size="xl" variant="primary-muted" rounded="full" className="mb-4">
-            <ListOrdered size={32} color="#f97316" />
-          </IconBox>
-          <Text className={`text-center ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-            Create a workout routine with exercises and sets. You can use percentage-based weights
-            or fixed weights.
-          </Text>
-        </View>
-
-        {/* Routine Name */}
-        <View className="mt-4">
-          <Input
-            label="Routine Name"
-            value={routineName}
-            onChangeText={setRoutineName}
-            placeholder="e.g., Push Day, Full Body A"
-            className="mb-6"
-          />
-        </View>
-
         {/* Exercises Label */}
-        <Text className={`text-sm font-medium mt-4 mb-3 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+        <Text className={`text-sm font-medium mb-3 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
           Exercises ({routineExercises.length})
         </Text>
       </View>
     ),
-    [isDark, routineName, routineExercises.length]
+    [isDark, routineExercises.length]
   );
 
   const ListFooter = useCallback(
@@ -405,6 +384,27 @@ export default function RoutineScreen() {
           <Text className={`text-sm mt-2 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
             Step 6 of 10
           </Text>
+        </View>
+
+        {/* Intro and Routine Name - Outside DraggableFlatList for proper keyboard handling */}
+        <View className="px-6">
+          <View className="items-center mb-6">
+            <IconBox size="xl" variant="primary-muted" rounded="full" className="mb-4">
+              <ListOrdered size={32} color="#f97316" />
+            </IconBox>
+            <Text className={`text-center ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+              Create a workout routine with exercises and sets. You can use percentage-based weights
+              or fixed weights.
+            </Text>
+          </View>
+
+          <Input
+            label="Routine Name"
+            value={routineName}
+            onChangeText={setRoutineName}
+            placeholder="e.g., Push Day, Full Body A"
+            className="mb-4"
+          />
         </View>
 
         <DraggableFlatList

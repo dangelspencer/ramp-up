@@ -14,6 +14,7 @@ export const settings = sqliteTable('settings', {
 // - defaultRestTime: number (seconds)
 // - notificationsEnabled: "true" | "false"
 // - workoutRemindersEnabled: "true" | "false"
+// - workoutReminderTime: "18:00"
 // - measurementRemindersEnabled: "true" | "false"
 // - measurementReminderFrequency: "daily" | "weekly" | "custom"
 // - measurementReminderTime: "08:00"
@@ -35,6 +36,7 @@ export type SettingKey =
   | 'defaultRestTime'
   | 'notificationsEnabled'
   | 'workoutRemindersEnabled'
+  | 'workoutReminderTime'
   | 'measurementRemindersEnabled'
   | 'measurementReminderFrequency'
   | 'measurementReminderTime'
@@ -52,6 +54,7 @@ export const defaultSettings: Record<SettingKey, string> = {
   defaultRestTime: '90',
   notificationsEnabled: 'true',
   workoutRemindersEnabled: 'true',
+  workoutReminderTime: '18:00',
   measurementRemindersEnabled: 'false',
   measurementReminderFrequency: 'weekly',
   measurementReminderTime: '08:00',

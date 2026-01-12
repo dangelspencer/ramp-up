@@ -78,12 +78,8 @@ export default function SettingsProfileScreen() {
         >
           {/* Profile Icon */}
           <View className="items-center py-6">
-            <View
-              className={`w-24 h-24 rounded-full items-center justify-center ${
-                isDark ? 'bg-zinc-800' : 'bg-white'
-              }`}
-            >
-              <User size={48} color={isDark ? '#a1a1aa' : '#71717a'} />
+            <View className={`p-4 rounded-full mb-3 ${isDark ? 'bg-zinc-800' : 'bg-zinc-200'}`}>
+              <User size={32} color={isDark ? '#a1a1aa' : '#71717a'} />
             </View>
           </View>
 

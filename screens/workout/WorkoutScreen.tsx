@@ -3,13 +3,14 @@ import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
 
 import { RootStackParamList } from '../../App';
 import { useSettings, useActiveWorkout } from '@/hooks';
 import { ConfirmModal } from '@/components/ui/Modal';
 import { SetRow } from '@/components/workout/SetRow';
 import { LogSetModal } from '@/components/workout/LogSetModal';
+import { PlateCalculatorModal } from '@/components/workout/PlateCalculator';
 import { RestTimer } from '@/components/workout/RestTimer';
 import { formatDuration } from '@/utils/formatting';
 
@@ -19,7 +20,7 @@ type WorkoutRouteProp = RouteProp<RootStackParamList, 'Workout'>;
 export default function WorkoutScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<WorkoutRouteProp>();
-  const { routineId } = route.params;
+  const { routineId, programId } = route.params;
 
   const { effectiveTheme, settings } = useSettings();
   const isDark = effectiveTheme === 'dark';
@@ -41,13 +42,17 @@ export default function WorkoutScreen() {
     visible: boolean;
     setIndex: number | null;
   }>({ visible: false, setIndex: null });
+  const [plateCalcState, setPlateCalcState] = useState<{
+    visible: boolean;
+    weight: number | null;
+  }>({ visible: false, weight: null });
 
   // Start the workout when screen loads
   useEffect(() => {
     const initWorkout = async () => {
       if (!state.isActive) {
         try {
-          await startWorkout(routineId);
+          await startWorkout(routineId, programId);
         } catch (error) {
           Alert.alert('Error', 'Failed to start workout');
           navigation.goBack();
@@ -57,7 +62,7 @@ export default function WorkoutScreen() {
     };
 
     initWorkout();
-  }, [routineId, startWorkout, state.isActive, navigation]);
+  }, [routineId, programId, startWorkout, state.isActive, navigation]);
 
   // Elapsed time timer
   useEffect(() => {
@@ -78,6 +83,14 @@ export default function WorkoutScreen() {
 
   const handleCloseLogModal = useCallback(() => {
     setLogModalState({ visible: false, setIndex: null });
+  }, []);
+
+  const handleOpenPlateCalc = useCallback((weight: number) => {
+    setPlateCalcState({ visible: true, weight });
+  }, []);
+
+  const handleClosePlateCalc = useCallback(() => {
+    setPlateCalcState({ visible: false, weight: null });
   }, []);
 
   const handleLogSet = useCallback(
@@ -169,12 +182,12 @@ export default function WorkoutScreen() {
         <View className="flex-row items-center justify-between">
           <TouchableOpacity
             onPress={() => setShowCancelModal(true)}
-            className="p-2 -ml-2"
+            className={`p-2 rounded-lg shrink-0 ${isDark ? 'bg-zinc-800' : 'bg-white'}`}
           >
-            <X size={24} color={isDark ? '#f87171' : '#dc2626'} />
+            <ChevronLeft size={24} color={isDark ? '#ffffff' : '#18181b'} />
           </TouchableOpacity>
-          <View className="items-center">
-            <Text className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+          <View className="items-center flex-1 mx-2">
+            <Text numberOfLines={1} className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
               {state.routineName}
             </Text>
             <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
@@ -183,9 +196,9 @@ export default function WorkoutScreen() {
           </View>
           <TouchableOpacity
             onPress={handleFinishWorkout}
-            className="p-2 -mr-2"
+            className="bg-orange-500 rounded-lg p-2 shrink-0"
           >
-            <Check size={24} color="#22c55e" />
+            <Check size={24} color="#ffffff" />
           </TouchableOpacity>
         </View>
 
@@ -256,6 +269,7 @@ export default function WorkoutScreen() {
               completed={set.completed}
               percentageOfMax={set.percentageOfMax}
               onLogPress={() => handleOpenLogModal(setIndex)}
+              onRowPress={() => handleOpenPlateCalc(set.completed ? (set.actualWeight ?? set.targetWeight) : set.targetWeight)}
             />
           ))}
         </View>
@@ -284,6 +298,13 @@ export default function WorkoutScreen() {
         confirmText="Cancel Workout"
         cancelText="Keep Going"
         variant="destructive"
+      />
+
+      {/* Plate Calculator Modal */}
+      <PlateCalculatorModal
+        visible={plateCalcState.visible}
+        onClose={handleClosePlateCalc}
+        initialWeight={plateCalcState.weight ?? undefined}
       />
     </SafeAreaView>
   );

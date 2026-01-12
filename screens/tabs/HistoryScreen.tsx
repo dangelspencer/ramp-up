@@ -1,9 +1,14 @@
 import { useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Calendar, ChevronRight, Dumbbell, Clock, CheckCircle } from 'lucide-react-native';
 import { useSettings, useWorkoutHistory } from '@/hooks';
 import { formatWeight } from '@/utils/formatting';
+import { RootStackParamList } from '../../App';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 function formatDate(dateString: string | null): string {
   if (!dateString) return 'Unknown date';
@@ -37,11 +42,19 @@ function formatDuration(startedAt: string, completedAt: string | null): string {
 }
 
 export default function HistoryScreen() {
+  const navigation = useNavigation<NavigationProp>();
   const { effectiveTheme, settings } = useSettings();
   const isDark = effectiveTheme === 'dark';
 
   const { workouts, isLoading, refresh } = useWorkoutHistory();
   const [refreshing, setRefreshing] = useState(false);
+
+  // Refresh data when screen gains focus
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -145,10 +158,12 @@ export default function HistoryScreen() {
                       key={workout.id}
                       className={`rounded-xl p-4 mb-2 ${isDark ? 'bg-zinc-800' : 'bg-white'}`}
                       activeOpacity={0.7}
+                      onPress={() => navigation.navigate('WorkoutDetail', { id: workout.id })}
                     >
                       <View className="flex-row items-center justify-between mb-2">
                         <Text
-                          className={`font-semibold text-lg ${
+                          numberOfLines={1}
+                          className={`flex-1 mr-2 font-semibold text-lg ${
                             isDark ? 'text-white' : 'text-zinc-900'
                           }`}
                         >
@@ -185,7 +200,7 @@ export default function HistoryScreen() {
                         <Text
                           className={`text-sm mt-2 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}
                         >
-                          Total volume: {formatWeight(totalVolume, settings.units === 'imperial' ? 'lbs' : 'kg')}
+                          Total volume: {formatWeight(totalVolume, settings.units)}
                         </Text>
                       )}
 

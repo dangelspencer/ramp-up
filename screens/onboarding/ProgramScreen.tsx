@@ -7,7 +7,7 @@ import {
   ChevronLeft,
   Calendar,
   Check,
-  Infinity,
+  Infinity as InfinityIcon,
   Target,
   GripVertical,
 } from 'lucide-react-native';
@@ -197,7 +197,7 @@ export default function ProgramScreen() {
                 <IconBox
                   variant={programType === 'continuous' ? 'primary' : isDark ? 'muted-dark' : 'muted'}
                 >
-                  <Infinity
+                  <InfinityIcon
                     size={20}
                     color={programType === 'continuous' ? '#ffffff' : isDark ? '#a1a1aa' : '#71717a'}
                   />

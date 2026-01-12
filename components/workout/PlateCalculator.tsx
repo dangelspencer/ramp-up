@@ -21,63 +21,111 @@ interface PlateVisualizationProps {
   barWeight: number;
 }
 
+// Get plate dimensions based on weight
+function getPlateSize(weight: number): { height: number; width: number } {
+  // Scale height based on weight (heavier = taller)
+  const heights: { [key: number]: number } = {
+    45: 70,
+    35: 62,
+    25: 54,
+    10: 42,
+    5: 34,
+    2.5: 28,
+  };
+  return {
+    height: heights[weight] || 40,
+    width: 18, // Fixed width for consistency
+  };
+}
+
 function PlateVisualization({ plates, barWeight }: PlateVisualizationProps) {
-  const { effectiveTheme } = useSettings();
+  const { effectiveTheme, settings } = useSettings();
   const isDark = effectiveTheme === 'dark';
+  const unitLabel = settings.units === 'imperial' ? 'lbs' : 'kg';
 
   const loadingOrder = getPlateLoadingOrder({ platesPerSide: plates, achievableWeight: 0, isExact: true, totalBarWeight: barWeight });
 
+  if (loadingOrder.length === 0) {
+    return (
+      <View className="items-center py-6">
+        <View className="flex-row items-center">
+          <View
+            className={`h-5 rounded-full ${isDark ? 'bg-zinc-500' : 'bg-zinc-400'}`}
+            style={{ width: 120 }}
+          />
+        </View>
+        <Text className={`text-sm mt-3 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+          Just the bar ({barWeight} {unitLabel})
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View className="items-center py-4">
+      {/* Bar visualization */}
       <View className="flex-row items-center">
         {/* Left plates (reversed for visual) */}
         <View className="flex-row items-center">
-          {[...loadingOrder].reverse().map((weight, index) => (
-            <View
-              key={`left-${index}`}
-              className="items-center justify-center rounded-sm mx-0.5"
-              style={{
-                backgroundColor: PLATE_COLORS[weight] || '#71717a',
-                height: 40 + weight * 0.5,
-                width: 12 + weight * 0.2,
-              }}
-            >
-              <Text className="text-white text-xs font-bold" style={{ fontSize: 8 }}>
-                {weight}
-              </Text>
-            </View>
-          ))}
+          {[...loadingOrder].reverse().map((weight, index) => {
+            const size = getPlateSize(weight);
+            return (
+              <View
+                key={`left-${index}`}
+                className="items-center justify-center rounded mx-0.5"
+                style={{
+                  backgroundColor: PLATE_COLORS[weight] || '#71717a',
+                  height: size.height,
+                  width: size.width,
+                }}
+              />
+            );
+          })}
         </View>
 
         {/* Bar */}
         <View
-          className={`h-4 rounded-full mx-2 ${isDark ? 'bg-zinc-500' : 'bg-zinc-400'}`}
-          style={{ width: 80 }}
+          className={`h-5 rounded-full mx-1 ${isDark ? 'bg-zinc-500' : 'bg-zinc-400'}`}
+          style={{ width: 60 }}
         />
 
         {/* Right plates */}
         <View className="flex-row items-center">
-          {loadingOrder.map((weight, index) => (
-            <View
-              key={`right-${index}`}
-              className="items-center justify-center rounded-sm mx-0.5"
-              style={{
-                backgroundColor: PLATE_COLORS[weight] || '#71717a',
-                height: 40 + weight * 0.5,
-                width: 12 + weight * 0.2,
-              }}
-            >
-              <Text className="text-white text-xs font-bold" style={{ fontSize: 8 }}>
-                {weight}
-              </Text>
-            </View>
-          ))}
+          {loadingOrder.map((weight, index) => {
+            const size = getPlateSize(weight);
+            return (
+              <View
+                key={`right-${index}`}
+                className="items-center justify-center rounded mx-0.5"
+                style={{
+                  backgroundColor: PLATE_COLORS[weight] || '#71717a',
+                  height: size.height,
+                  width: size.width,
+                }}
+              />
+            );
+          })}
         </View>
       </View>
 
+      {/* Plate legend */}
+      <View className="flex-row flex-wrap justify-center gap-2 mt-4">
+        {plates.map(({ weight, count }) => (
+          <View
+            key={weight}
+            className="flex-row items-center px-2 py-1 rounded-full"
+            style={{ backgroundColor: PLATE_COLORS[weight] || '#71717a' }}
+          >
+            <Text className="text-white text-xs font-bold">
+              {count}x {weight}
+            </Text>
+          </View>
+        ))}
+      </View>
+
       {/* Bar weight label */}
-      <Text className={`text-xs mt-2 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-        Bar: {barWeight} lbs
+      <Text className={`text-xs mt-3 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+        Bar: {barWeight} {unitLabel}
       </Text>
     </View>
   );

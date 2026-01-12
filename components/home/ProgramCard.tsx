@@ -22,35 +22,36 @@ export function ProgramCard({
   const { effectiveTheme } = useSettings();
   const isDark = effectiveTheme === 'dark';
 
+  const completedWorkouts = program.currentPosition ?? 0;
+
+  // Progress shows completed workouts as percentage
   const progress =
     program.type === 'finite' && program.totalWorkouts
-      ? ((program.currentPosition ?? 0) / program.totalWorkouts) * 100
+      ? (completedWorkouts / program.totalWorkouts) * 100
       : null;
-
-  const workoutNumber = (program.currentPosition ?? 0) + 1;
   const isComplete = program.type === 'finite' && program.totalWorkouts
-    ? workoutNumber > program.totalWorkouts
+    ? completedWorkouts >= program.totalWorkouts
     : false;
 
   return (
     <Card variant="elevated" className="mb-4">
       <TouchableOpacity onPress={onViewProgram} className="flex-row items-center justify-between mb-3">
-        <View className="flex-row items-center gap-2">
-          <View className={`p-2 rounded-lg ${isDark ? 'bg-orange-500/20' : 'bg-orange-100'}`}>
+        <View className="flex-row items-center gap-2 flex-1 mr-2">
+          <View className={`p-2 rounded-lg shrink-0 ${isDark ? 'bg-orange-500/20' : 'bg-orange-100'}`}>
             {program.type === 'continuous' ? (
               <Repeat size={20} color="#f97316" />
             ) : (
               <PlayCircle size={20} color="#f97316" />
             )}
           </View>
-          <View>
-            <Text className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+          <View className="flex-1">
+            <Text numberOfLines={1} className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
               {program.name}
             </Text>
             <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
               {program.type === 'continuous'
                 ? 'Continuous program'
-                : `Workout ${workoutNumber} of ${program.totalWorkouts}`}
+                : `${completedWorkouts} / ${program.totalWorkouts} workouts`}
             </Text>
           </View>
         </View>
@@ -70,7 +71,7 @@ export function ProgramCard({
           <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
             Next up
           </Text>
-          <Text className={`font-medium ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+          <Text numberOfLines={1} className={`font-medium ${isDark ? 'text-white' : 'text-zinc-900'}`}>
             {nextRoutineName}
           </Text>
         </View>
