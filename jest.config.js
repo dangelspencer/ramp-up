@@ -6,6 +6,7 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/__tests__/setup.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    '^expo-crypto$': '<rootDir>/__tests__/__mocks__/expo-crypto.ts',
   },
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {

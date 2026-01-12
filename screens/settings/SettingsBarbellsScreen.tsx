@@ -10,7 +10,6 @@ import {
   Star,
   Trash2,
   Pencil,
-  Check,
 } from 'lucide-react-native';
 import { useSettings, useBarbells } from '@/hooks';
 import { Card, Button } from '@/components/ui';
@@ -86,7 +85,7 @@ export default function SettingsBarbellsScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { effectiveTheme, settings } = useSettings();
   const isDark = effectiveTheme === 'dark';
-  const { barbells, isLoading, refresh, createBarbell, updateBarbell, deleteBarbell, setDefault } = useBarbells();
+  const { barbells, refresh, createBarbell, updateBarbell, deleteBarbell, setDefault } = useBarbells();
 
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -143,7 +142,7 @@ export default function SettingsBarbellsScreen() {
       }
 
       setModalVisible(false);
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to save barbell. Please try again.');
     } finally {
       setIsSaving(false);

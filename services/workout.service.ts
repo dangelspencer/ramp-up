@@ -9,7 +9,6 @@ import {
   routines,
   barbells,
   Workout,
-  NewWorkout,
   WorkoutSet,
 } from '@/db/schema';
 import { routineService } from './routine.service';

@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ChevronLeft, Check, Plus, X, GripVertical } from 'lucide-react-native';
+import { ChevronLeft, Plus, X, GripVertical } from 'lucide-react-native';
 
 import { useSettings, usePrograms, useRoutines } from '@/hooks';
 import { Button } from '@/components/ui/Button';
@@ -81,7 +81,7 @@ export default function ProgramCreateScreen() {
           },
         ]
       );
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to create program. Please try again.');
     } finally {
       setIsSaving(false);

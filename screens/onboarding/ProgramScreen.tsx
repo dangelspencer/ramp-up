@@ -9,10 +9,9 @@ import {
   Check,
   Infinity as InfinityIcon,
   Target,
-  GripVertical,
 } from 'lucide-react-native';
 import { useSettings, useOnboarding, useRoutines, usePrograms } from '@/hooks';
-import { Button, Card, Input, NumberInput, SegmentedControl, IconBox } from '@/components/ui';
+import { Button, Card, Input, NumberInput, IconBox } from '@/components/ui';
 import { OnboardingStackParamList } from '../../App';
 
 type NavigationProp = NativeStackNavigationProp<OnboardingStackParamList>;
@@ -21,8 +20,8 @@ export default function ProgramScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { effectiveTheme } = useSettings();
   const { updateData, setStep } = useOnboarding();
-  const { routines, isLoading: routinesLoading } = useRoutines();
-  const { createProgram, setActive, isLoading: programsLoading } = usePrograms();
+  const { routines } = useRoutines();
+  const { createProgram, setActive } = usePrograms();
   const isDark = effectiveTheme === 'dark';
 
   const [programName, setProgramName] = useState('Strength Program');

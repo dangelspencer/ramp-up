@@ -50,7 +50,7 @@ export default function BodyCompLogScreen() {
       });
 
       navigation.goBack();
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to save measurement. Please try again.');
     } finally {
       setIsSubmitting(false);

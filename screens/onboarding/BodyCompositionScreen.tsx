@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ChevronLeft, Scale, Ruler, Info } from 'lucide-react-native';
+import { ChevronLeft, Scale, Info } from 'lucide-react-native';
 import { useSettings, useOnboarding, useBodyComposition } from '@/hooks';
 import { Button, Card, NumberInput, IconBox } from '@/components/ui';
 import { OnboardingStackParamList } from '../../App';
@@ -14,7 +14,7 @@ export default function BodyCompositionScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { effectiveTheme, settings } = useSettings();
   const { updateData, setStep } = useOnboarding();
-  const { createEntry, isLoading: bodyCompLoading } = useBodyComposition();
+  const { createEntry } = useBodyComposition();
   const isDark = effectiveTheme === 'dark';
 
   const [weight, setWeight] = useState<number | null>(null);
@@ -49,7 +49,7 @@ export default function BodyCompositionScreen() {
       });
       setStep('complete');
       navigation.navigate('Complete');
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to save body composition data');
     } finally {
       setIsSubmitting(false);

@@ -35,7 +35,7 @@ export default function ExercisesSetupScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { effectiveTheme, settings } = useSettings();
   const { updateData, setStep } = useOnboarding();
-  const { exercises, createExercise, isLoading: exercisesLoading } = useExercises();
+  const { exercises, createExercise } = useExercises();
   const { barbells } = useBarbells();
   const isDark = effectiveTheme === 'dark';
 
@@ -162,7 +162,7 @@ export default function ExercisesSetupScreen() {
       });
       setStep('routine');
       navigation.navigate('Routine');
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to save exercises');
     } finally {
       setIsSubmitting(false);

@@ -1,8 +1,8 @@
 import React, { ReactNode, useEffect } from 'react';
 import { DatabaseProvider, useDatabase } from './DatabaseContext';
-import { SettingsProvider, useSettings } from './SettingsContext';
-import { ActiveWorkoutProvider, useActiveWorkout } from './ActiveWorkoutContext';
-import { OnboardingProvider, useOnboarding } from './OnboardingContext';
+import { SettingsProvider } from './SettingsContext';
+import { ActiveWorkoutProvider } from './ActiveWorkoutContext';
+import { OnboardingProvider } from './OnboardingContext';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { audio } from '@/utils/audio';
 

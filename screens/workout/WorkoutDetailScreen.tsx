@@ -94,7 +94,7 @@ export default function WorkoutDetailScreen() {
       await workoutService.delete(id);
       setShowDeleteModal(false);
       navigation.goBack();
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to delete workout');
     } finally {
       setIsDeleting(false);

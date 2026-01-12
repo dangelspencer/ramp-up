@@ -1,7 +1,7 @@
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 import { db } from '@/db/client';
-import { goals, Goal, NewGoal } from '@/db/schema';
+import { goals, Goal } from '@/db/schema';
 import { workoutService } from './workout.service';
 
 export interface GoalProgress {
@@ -134,7 +134,7 @@ export const goalService = {
     }
 
     // Check if on track (have we completed enough workouts so far this week?)
-    const daysPassedThisWeek = currentDay;
+    const _daysPassedThisWeek = currentDay;
     const scheduledDaysPassed = scheduledDays.filter((d) => d < currentDay).length;
     const isOnTrack = workoutsThisWeek.length >= scheduledDaysPassed;
 

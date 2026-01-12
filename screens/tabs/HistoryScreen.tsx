@@ -46,7 +46,7 @@ export default function HistoryScreen() {
   const { effectiveTheme, settings } = useSettings();
   const isDark = effectiveTheme === 'dark';
 
-  const { workouts, isLoading, refresh } = useWorkoutHistory();
+  const { workouts, refresh } = useWorkoutHistory();
   const [refreshing, setRefreshing] = useState(false);
 
   // Refresh data when screen gains focus

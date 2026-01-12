@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -157,7 +157,7 @@ export default function BodyCompIndexScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { effectiveTheme, settings } = useSettings();
   const isDark = effectiveTheme === 'dark';
-  const { entries, latest, isLoading, refresh, deleteEntry } = useBodyComposition();
+  const { entries, latest, refresh, deleteEntry } = useBodyComposition();
 
   const [refreshing, setRefreshing] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);

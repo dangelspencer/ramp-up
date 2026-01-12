@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text } from 'react-native';
 import { useSettings } from '@/hooks';
 import { Card } from '@/components/ui';
 import { Target, Flame, Check, ChevronRight } from 'lucide-react-native';

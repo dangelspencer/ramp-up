@@ -256,7 +256,7 @@ interface PlateDisplayProps {
 }
 
 export function PlateDisplay({ weight, barWeight = 45, onPress, compact = false }: PlateDisplayProps) {
-  const { effectiveTheme, settings } = useSettings();
+  const { effectiveTheme } = useSettings();
   const isDark = effectiveTheme === 'dark';
   const [calculation, setCalculation] = useState<PlateCalculation | null>(null);
 

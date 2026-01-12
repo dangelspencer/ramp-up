@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, useColorScheme, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,7 +14,6 @@ export default function ProfileScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { effectiveTheme, updateSettings } = useSettings();
   const { data, updateData, setStep } = useOnboarding();
-  const colorScheme = useColorScheme();
   const isDark = effectiveTheme === 'dark';
 
   const [height, setHeight] = useState<number | null>(data.height ?? 70);

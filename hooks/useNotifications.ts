@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import * as Notifications from 'expo-notifications';
 import { notificationService, WorkoutReminderSchedule } from '@/services/notification.service';
 
 export function useNotifications() {

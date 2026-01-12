@@ -1,4 +1,4 @@
-import { setAudioModeAsync, AudioModule } from 'expo-audio';
+import { setAudioModeAsync } from 'expo-audio';
 import * as Notifications from 'expo-notifications';
 import { settingsService } from '@/services/settings.service';
 import { Platform } from 'react-native';

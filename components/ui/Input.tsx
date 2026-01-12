@@ -20,7 +20,7 @@ export const Input = forwardRef<TextInput, InputProps>(
       leftIcon,
       rightIcon,
       containerClassName = '',
-      className = '',
+      className: _className = '',
       ...props
     },
     ref
@@ -95,7 +95,7 @@ export function NumberInput({
   onChangeValue,
   min,
   max,
-  step = 1,
+  step: _step = 1,
   allowDecimals = false,
   suffix,
   isDark: isDarkProp,

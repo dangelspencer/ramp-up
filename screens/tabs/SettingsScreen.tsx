@@ -76,7 +76,7 @@ export default function SettingsScreen() {
           routes: [{ name: 'Onboarding' }],
         })
       );
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to clear data. Please try again.');
     } finally {
       setIsClearing(false);

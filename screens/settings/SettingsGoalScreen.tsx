@@ -15,7 +15,7 @@ import {
 import { useSettings, useGoals } from '@/hooks';
 import { Card, Button } from '@/components/ui';
 import { NumberInput } from '@/components/ui/Input';
-import { ProgressBar, CircularProgress } from '@/components/ui/ProgressBar';
+import { CircularProgress } from '@/components/ui/ProgressBar';
 import { ConfirmModal } from '@/components/ui/Modal';
 import { RootStackParamList } from '../../App';
 import { getDayName } from '@/utils/formatting';
@@ -39,11 +39,9 @@ export default function SettingsGoalScreen() {
   const {
     activeGoal,
     progress,
-    isLoading,
     createGoal,
     updateGoal,
     deleteGoal,
-    refresh,
   } = useGoals();
 
   const [workoutsPerWeek, setWorkoutsPerWeek] = useState<number | null>(activeGoal?.workoutsPerWeek ?? 3);

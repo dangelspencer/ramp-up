@@ -30,7 +30,7 @@ export function RestTimer({
   onComplete,
   size = 'md',
 }: RestTimerProps) {
-  const { effectiveTheme, settings } = useSettings();
+  const { effectiveTheme } = useSettings();
   const isDark = effectiveTheme === 'dark';
   const previousSecondsRef = useRef(remainingSeconds);
 
@@ -154,7 +154,7 @@ interface CompactRestTimerProps {
 export function CompactRestTimer({
   remainingSeconds,
   totalSeconds,
-  isRunning,
+  isRunning: _isRunning,
   onSkip,
 }: CompactRestTimerProps) {
   const { effectiveTheme } = useSettings();

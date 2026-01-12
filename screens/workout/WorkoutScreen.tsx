@@ -22,7 +22,7 @@ export default function WorkoutScreen() {
   const route = useRoute<WorkoutRouteProp>();
   const { routineId, programId } = route.params;
 
-  const { effectiveTheme, settings } = useSettings();
+  const { effectiveTheme } = useSettings();
   const isDark = effectiveTheme === 'dark';
 
   const {
@@ -53,7 +53,7 @@ export default function WorkoutScreen() {
       if (!state.isActive) {
         try {
           await startWorkout(routineId, programId);
-        } catch (error) {
+        } catch (_error) {
           Alert.alert('Error', 'Failed to start workout');
           navigation.goBack();
         }

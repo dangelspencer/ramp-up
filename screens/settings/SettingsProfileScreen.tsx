@@ -47,10 +47,6 @@ export default function SettingsProfileScreen() {
     }
   };
 
-  // Convert height for display
-  const heightInFeet = height ? Math.floor(height / 12) : null;
-  const heightInInches = height ? height % 12 : null;
-
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: isDark ? '#09090b' : '#f4f4f5' }}>
       {/* Header */}

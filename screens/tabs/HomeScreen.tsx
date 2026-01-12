@@ -94,7 +94,7 @@ export default function HomeScreen() {
     navigation.navigate('BodyCompLog');
   };
 
-  const isLoading = programsLoading || goalsLoading || bodyLoading;
+  const _isLoading = programsLoading || goalsLoading || bodyLoading;
   const previousBodyComp = entries.length > 1 ? entries[1] : null;
 
   return (

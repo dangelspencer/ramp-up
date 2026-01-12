@@ -90,7 +90,11 @@ module.exports = [
       // TypeScript recommended rules
       ...typescript.configs.recommended.rules,
       // Allow unused vars that start with underscore
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': ['warn', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_'
+      }],
       // Allow require imports for dynamic imports
       '@typescript-eslint/no-require-imports': 'off',
       // Allow any for callback types in libraries
@@ -122,6 +126,7 @@ module.exports = [
       'dist/**',
       'build/**',
       'rampup-mockups.tsx',
+      'docs/**',
       '*.config.js',
       '*.config.ts',
       'babel.config.js',

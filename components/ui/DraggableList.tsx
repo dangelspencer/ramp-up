@@ -73,7 +73,7 @@ function DraggableItem({
   index,
   itemHeight,
   itemCount,
-  isDragging,
+  isDragging: _isDragging,
   onDragStart,
   onDragEnd,
 }: DraggableItemProps) {

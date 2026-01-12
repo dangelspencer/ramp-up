@@ -69,7 +69,7 @@ export default function BarbellsScreen() {
       setShowCustomModal(false);
       setCustomName('');
       setCustomWeight(45);
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to add barbell');
     } finally {
       setIsSubmitting(false);
@@ -102,7 +102,7 @@ export default function BarbellsScreen() {
       updateData({ selectedBarbells: selectedBarbells.map(b => b.name) });
       setStep('plates');
       navigation.navigate('Plates');
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to save barbells');
     } finally {
       setIsSubmitting(false);

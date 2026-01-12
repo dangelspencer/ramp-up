@@ -89,7 +89,7 @@ export default function ProgramDetailScreen() {
       await refresh();
       await refreshPrograms();
       setIsEditing(false);
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to update program. Please try again.');
     } finally {
       setIsSaving(false);
@@ -102,7 +102,7 @@ export default function ProgramDetailScreen() {
       await refresh();
       await refreshPrograms();
       Alert.alert('Success', 'Program is now active');
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to activate program');
     }
   };
@@ -112,7 +112,7 @@ export default function ProgramDetailScreen() {
       setIsDeleting(true);
       await deleteProgram(id);
       navigation.goBack();
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to delete program');
     } finally {
       setIsDeleting(false);

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
-import { settingsService, AppSettings, Theme } from '@/services/settings.service';
+import { settingsService, AppSettings } from '@/services/settings.service';
 import { useColorScheme } from 'react-native';
 
 interface SettingsContextType {

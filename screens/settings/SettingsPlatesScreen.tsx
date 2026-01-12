@@ -107,7 +107,6 @@ export default function SettingsPlatesScreen() {
   const isDark = effectiveTheme === 'dark';
   const {
     plates,
-    isLoading,
     refresh,
     setPlateCount,
     incrementCount,
@@ -163,7 +162,7 @@ export default function SettingsPlatesScreen() {
       setError(null);
       await setPlateCount(newWeight, newCount);
       setAddModalVisible(false);
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to add plate. Please try again.');
     } finally {
       setIsSaving(false);

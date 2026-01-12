@@ -1,7 +1,7 @@
 import { eq, desc } from 'drizzle-orm';
 
 import { db } from '@/db/client';
-import { bodyCompositions, BodyComposition, NewBodyComposition } from '@/db/schema';
+import { bodyCompositions, BodyComposition } from '@/db/schema';
 import { calculateUSNavyBodyFat, Gender } from '@/utils/calculations';
 import { settingsService } from './settings.service';
 

@@ -79,7 +79,7 @@ export default function ExerciseCreateScreen() {
       });
 
       navigation.goBack();
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to create exercise. Please try again.');
     } finally {
       setIsSaving(false);

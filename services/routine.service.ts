@@ -7,11 +7,6 @@ import {
   routineExerciseSets,
   exercises,
   Routine,
-  NewRoutine,
-  RoutineExercise,
-  RoutineExerciseSet,
-  NewRoutineExercise,
-  NewRoutineExerciseSet,
 } from '@/db/schema';
 
 export interface RoutineSetInput {

@@ -10,7 +10,6 @@ import {
   ListOrdered,
   Plus,
   Trash2,
-  Check,
   ChevronDown,
   ChevronUp,
   GripVertical,
@@ -43,8 +42,8 @@ export default function RoutineScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { effectiveTheme, settings } = useSettings();
   const { updateData, setStep } = useOnboarding();
-  const { exercises, isLoading: exercisesLoading } = useExercises();
-  const { routines, createRoutine, isLoading: routinesLoading } = useRoutines();
+  const { exercises } = useExercises();
+  const { createRoutine } = useRoutines();
   const isDark = effectiveTheme === 'dark';
 
   const [routineName, setRoutineName] = useState('Full Body A');
@@ -196,7 +195,7 @@ export default function RoutineScreen() {
       }));
 
       // Create the routine
-      const routine = await createRoutine(routineName.trim(), exercisesInput);
+      await createRoutine(routineName.trim(), exercisesInput);
 
       updateData({
         routine: {
@@ -206,7 +205,7 @@ export default function RoutineScreen() {
       });
       setStep('program');
       navigation.navigate('Program');
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to create routine');
     } finally {
       setIsSubmitting(false);

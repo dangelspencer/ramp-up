@@ -217,7 +217,7 @@ export default function RoutineDetailScreen() {
       await updateExercises(exerciseInputs);
       setIsEditing(false);
       refresh();
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to save routine');
     } finally {
       setIsSaving(false);
@@ -229,7 +229,7 @@ export default function RoutineDetailScreen() {
       await deleteRoutine(id);
       setShowDeleteModal(false);
       navigation.goBack();
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to delete routine');
     }
   };
@@ -245,7 +245,7 @@ export default function RoutineDetailScreen() {
       setShowDuplicateModal(false);
       setDuplicateName('');
       Alert.alert('Success', 'Routine duplicated successfully');
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to duplicate routine');
     }
   };
@@ -594,7 +594,7 @@ export default function RoutineDetailScreen() {
                   Exercises
                 </Text>
 
-                {routine.exercises.map((exercise, index) => (
+                {routine.exercises.map((exercise, _index) => (
                   <Card key={exercise.id} className="mb-3">
                     <Text className={`font-semibold mb-2 ${isDark ? 'text-white' : 'text-zinc-900'}`}>
                       {exercise.exercise.name}

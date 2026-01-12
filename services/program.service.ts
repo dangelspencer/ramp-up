@@ -1,4 +1,4 @@
-import { eq, asc, and } from 'drizzle-orm';
+import { eq, asc } from 'drizzle-orm';
 
 import { db } from '@/db/client';
 import {
@@ -6,7 +6,6 @@ import {
   programRoutines,
   routines,
   Program,
-  NewProgram,
 } from '@/db/schema';
 
 export interface ProgramWithRoutines extends Program {

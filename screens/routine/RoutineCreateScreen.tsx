@@ -11,8 +11,8 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input, NumberInput } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
-import { Select, SegmentedControl } from '@/components/ui/Select';
-import { RoutineExerciseInput, RoutineSetInput } from '@/services/routine.service';
+import { SegmentedControl } from '@/components/ui/Select';
+import { RoutineExerciseInput } from '@/services/routine.service';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -143,7 +143,7 @@ export default function RoutineCreateScreen() {
 
       await createRoutine(name.trim(), exerciseInputs);
       navigation.goBack();
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to create routine');
     } finally {
       setIsLoading(false);
@@ -186,7 +186,7 @@ export default function RoutineCreateScreen() {
               Exercises
             </Text>
 
-            {routineExercises.map((exercise, exerciseIndex) => (
+            {routineExercises.map((exercise, _exerciseIndex) => (
               <Card key={exercise.id} className="mb-4">
                 <View className="flex-row items-center justify-between mb-3">
                   <View className="flex-row items-center gap-2">

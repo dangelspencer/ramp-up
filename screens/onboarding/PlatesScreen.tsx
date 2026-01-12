@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ChevronLeft, Circle, Check, Plus, Minus } from 'lucide-react-native';
+import { ChevronLeft, Circle, Plus, Minus } from 'lucide-react-native';
 import { useSettings, useOnboarding, usePlateInventory } from '@/hooks';
 import { Button, Card, IconBox } from '@/components/ui';
 import { OnboardingStackParamList } from '../../App';
@@ -29,7 +29,7 @@ export default function PlatesScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { effectiveTheme, settings } = useSettings();
   const { updateData, setStep } = useOnboarding();
-  const { plates, setPlateCount, isLoading: platesLoading } = usePlateInventory();
+  const { plates, setPlateCount } = usePlateInventory();
   const isDark = effectiveTheme === 'dark';
 
   const [plateCounts, setPlateCounts] = useState<Record<number, number>>({
@@ -90,7 +90,7 @@ export default function PlatesScreen() {
       updateData({ plateInventory });
       setStep('exercises');
       navigation.navigate('Exercises');
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to save plate inventory');
     } finally {
       setIsSubmitting(false);

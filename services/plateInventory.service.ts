@@ -1,7 +1,7 @@
-import { eq, asc } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 import { db } from '@/db/client';
-import { plateInventory, PlateInventoryItem, NewPlateInventoryItem } from '@/db/schema';
+import { plateInventory, PlateInventoryItem } from '@/db/schema';
 import {
   calculatePlates,
   PlateCalculation,

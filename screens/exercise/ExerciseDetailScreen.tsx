@@ -130,7 +130,7 @@ export default function ExerciseDetailScreen() {
       await loadExercise();
       await refreshExercises();
       setIsEditing(false);
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to update exercise. Please try again.');
     } finally {
       setIsSaving(false);
@@ -142,7 +142,7 @@ export default function ExerciseDetailScreen() {
       setIsDeleting(true);
       await deleteExercise(id);
       navigation.goBack();
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Failed to delete exercise');
     } finally {
       setIsDeleting(false);

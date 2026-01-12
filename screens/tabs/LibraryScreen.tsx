@@ -43,7 +43,6 @@ export default function LibraryScreen() {
 
   const {
     programs,
-    activeProgram,
     isLoading: programsLoading,
     setActive,
     refresh: refreshPrograms,
@@ -61,7 +60,7 @@ export default function LibraryScreen() {
     refresh: refreshExercises,
   } = useExercises();
 
-  const unitLabel = getUnitLabel(settings.units);
+  const _unitLabel = getUnitLabel(settings.units);
 
   // Refresh data when screen gains focus
   useFocusEffect(
