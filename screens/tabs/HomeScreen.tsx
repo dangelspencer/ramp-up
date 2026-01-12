@@ -2,7 +2,7 @@ import { View, Text, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useSettings, usePrograms, useGoals, useBodyComposition } from '@/hooks';
 import { ProgramCard, NoProgramCard, GoalCard, NoGoalCard, BodyCompositionCard } from '@/components/home';
 import { routineService, RoutineWithDetails } from '@/services/routine.service';
@@ -37,16 +37,13 @@ export default function HomeScreen() {
   // Refresh data when screen gains focus
   useFocusEffect(
     useCallback(() => {
-      refreshPrograms();
-      refreshGoals();
-      refreshBody();
-    }, [])
+      const refresh = async () => {
+        await Promise.all([refreshPrograms(), refreshGoals(), refreshBody()]);
+        await loadNextRoutine();
+      };
+      refresh();
+    }, [refreshPrograms, refreshGoals, refreshBody, loadNextRoutine])
   );
-
-  // Load next routine when active program changes
-  useEffect(() => {
-    loadNextRoutine();
-  }, [loadNextRoutine]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
