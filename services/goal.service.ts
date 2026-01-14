@@ -10,6 +10,7 @@ export interface GoalProgress {
   streakWeeks: number;
   isOnTrack: boolean;
   scheduledDays: number[];
+  completedDays: number[];
   nextScheduledDay: number | null;
 }
 
@@ -117,25 +118,38 @@ export const goalService = {
     const workoutsThisWeek = await workoutService.getWorkoutsThisWeek();
     const scheduledDays = JSON.parse(goal.scheduledDays) as number[];
 
+    // Extract which days of the week had completed workouts
+    const completedDays = [...new Set(
+      workoutsThisWeek
+        .filter((w) => w.completedAt)
+        .map((w) => new Date(w.completedAt!).getDay())
+    )];
+
     const now = new Date();
     const currentDay = now.getDay();
 
-    // Find the next scheduled day
+    // Check if we already worked out today
+    const workedOutToday = completedDays.includes(currentDay);
+
+    // Find the next scheduled day (skip today if we already worked out)
     let nextScheduledDay: number | null = null;
-    for (const day of scheduledDays.sort((a, b) => a - b)) {
-      if (day >= currentDay) {
+    const sortedScheduledDays = scheduledDays.sort((a, b) => a - b);
+    for (const day of sortedScheduledDays) {
+      if (workedOutToday ? day > currentDay : day >= currentDay) {
         nextScheduledDay = day;
         break;
       }
     }
     // If no day found this week, next is the first scheduled day next week
     if (nextScheduledDay === null && scheduledDays.length > 0) {
-      nextScheduledDay = scheduledDays[0];
+      nextScheduledDay = sortedScheduledDays[0];
     }
 
     // Check if on track (have we completed enough workouts so far this week?)
-    const _daysPassedThisWeek = currentDay;
-    const scheduledDaysPassed = scheduledDays.filter((d) => d < currentDay).length;
+    // Count today as "passed" if we've already worked out today
+    const scheduledDaysPassed = scheduledDays.filter((d) =>
+      workedOutToday ? d <= currentDay : d < currentDay
+    ).length;
     const isOnTrack = workoutsThisWeek.length >= scheduledDaysPassed;
 
     return {
@@ -144,6 +158,7 @@ export const goalService = {
       streakWeeks: goal.currentStreak ?? 0,
       isOnTrack,
       scheduledDays,
+      completedDays,
       nextScheduledDay,
     };
   },

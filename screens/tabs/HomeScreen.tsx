@@ -2,7 +2,7 @@ import { View, Text, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useSettings, usePrograms, useGoals, useBodyComposition } from '@/hooks';
 import { ProgramCard, NoProgramCard, GoalCard, NoGoalCard, BodyCompositionCard } from '@/components/home';
 import { routineService, RoutineWithDetails } from '@/services/routine.service';
@@ -22,35 +22,38 @@ export default function HomeScreen() {
   const [nextRoutine, setNextRoutine] = useState<RoutineWithDetails | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const loadNextRoutine = useCallback(async () => {
-    if (activeProgram) {
-      const routineId = await getNextRoutine();
-      if (routineId) {
-        const routine = await routineService.getByIdWithDetails(routineId);
-        setNextRoutine(routine ?? null);
-      }
-    } else {
-      setNextRoutine(null);
-    }
-  }, [activeProgram, getNextRoutine]);
-
   // Refresh data when screen gains focus
   useFocusEffect(
     useCallback(() => {
-      const refresh = async () => {
-        await Promise.all([refreshPrograms(), refreshGoals(), refreshBody()]);
-        await loadNextRoutine();
-      };
-      refresh();
-    }, [refreshPrograms, refreshGoals, refreshBody, loadNextRoutine])
+      refreshPrograms();
+      refreshGoals();
+      refreshBody();
+    }, [refreshPrograms, refreshGoals, refreshBody])
   );
+
+  // Load next routine when activeProgram changes
+  useEffect(() => {
+    const loadNextRoutine = async () => {
+      if (activeProgram) {
+        const routineId = await getNextRoutine();
+        if (routineId) {
+          const routine = await routineService.getByIdWithDetails(routineId);
+          setNextRoutine(routine ?? null);
+        } else {
+          setNextRoutine(null);
+        }
+      } else {
+        setNextRoutine(null);
+      }
+    };
+    loadNextRoutine();
+  }, [activeProgram, getNextRoutine]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await Promise.all([refreshPrograms(), refreshGoals(), refreshBody()]);
-    await loadNextRoutine();
     setRefreshing(false);
-  }, [refreshPrograms, refreshGoals, refreshBody, loadNextRoutine]);
+  }, [refreshPrograms, refreshGoals, refreshBody]);
 
   const handleStartWorkout = () => {
     if (nextRoutine) {

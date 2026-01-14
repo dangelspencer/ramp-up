@@ -15,7 +15,7 @@
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "prebuild": "expo prebuild --clean",
-    "install:ios": "expo run:ios --configuration Release --device"
+    "install:ios": "expo run:ios --configuration Release --device --no-bundler"
   },
   "dependencies": {
     "@react-native-community/datetimepicker": "^8.4.4",

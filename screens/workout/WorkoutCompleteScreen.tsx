@@ -9,6 +9,7 @@ import { RootStackParamList } from '../../App';
 import { useSettings, useActiveWorkout, useWorkoutHistory } from '@/hooks';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
+import { Confetti } from '@/components/ui/Confetti';
 import { formatWeight, formatWorkoutDuration } from '@/utils/formatting';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -60,6 +61,9 @@ export default function WorkoutCompleteScreen() {
 
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: isDark ? '#09090b' : '#f4f4f5' }}>
+      {/* Confetti Animation */}
+      <Confetti count={60} />
+
       <ScrollView className="flex-1 px-4">
         {/* Header with Trophy */}
         <View className="items-center pt-8 pb-6">

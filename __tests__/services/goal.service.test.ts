@@ -117,10 +117,10 @@ describe('goalService', () => {
       const mockFrom = jest.fn().mockReturnValue({ where: mockWhere });
       (mockDb.select as jest.Mock).mockReturnValue({ from: mockFrom });
 
-      // Mock workouts this week (2 workouts completed)
+      // Mock workouts this week (2 workouts completed on Monday and Wednesday)
       mockWorkoutService.getWorkoutsThisWeek.mockResolvedValue([
-        { id: 'w1' } as any,
-        { id: 'w2' } as any,
+        { id: 'w1', completedAt: '2024-01-08T10:00:00' } as any, // Monday
+        { id: 'w2', completedAt: '2024-01-10T10:00:00' } as any, // Wednesday
       ]);
 
       const result = await goalService.getProgress();
@@ -130,8 +130,9 @@ describe('goalService', () => {
       expect(result!.workoutsTarget).toBe(3);
       expect(result!.streakWeeks).toBe(2);
       expect(result!.scheduledDays).toEqual([1, 3, 5]);
-      // Next scheduled day from Wednesday (3) should be Friday (5)
-      expect(result!.nextScheduledDay).toBe(3); // Wednesday is current day
+      expect(result!.completedDays).toEqual([1, 3]); // Monday and Wednesday
+      // Since we worked out today (Wednesday), next scheduled day should be Friday (5)
+      expect(result!.nextScheduledDay).toBe(5);
     });
 
     it('should return null if no active goal', async () => {
@@ -207,9 +208,9 @@ describe('goalService', () => {
 
       // User completed 3+ workouts this week
       mockWorkoutService.getWorkoutsThisWeek.mockResolvedValue([
-        { id: 'w1' } as any,
-        { id: 'w2' } as any,
-        { id: 'w3' } as any,
+        { id: 'w1', completedAt: '2024-01-08T10:00:00' } as any,
+        { id: 'w2', completedAt: '2024-01-09T10:00:00' } as any,
+        { id: 'w3', completedAt: '2024-01-10T10:00:00' } as any,
       ]);
 
       const mockUpdateWhere = jest.fn().mockResolvedValue([]);

@@ -225,6 +225,44 @@ export const notificationService = {
   },
 
   /**
+   * Schedule rest timer complete notification
+   */
+  async scheduleRestTimerNotification(seconds: number): Promise<void> {
+    const settings = await settingsService.getAll();
+    if (!settings.notificationsEnabled) {
+      return;
+    }
+
+    // Cancel any existing rest timer notification first
+    await this.cancelRestTimerNotification();
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Rest Complete',
+        body: 'Time for your next set!',
+        sound: true,
+        data: { type: 'rest_timer_complete' },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds,
+      },
+      identifier: 'rest-timer',
+    });
+  },
+
+  /**
+   * Cancel rest timer notification
+   */
+  async cancelRestTimerNotification(): Promise<void> {
+    try {
+      await Notifications.cancelScheduledNotificationAsync('rest-timer');
+    } catch {
+      // Notification may not exist, ignore error
+    }
+  },
+
+  /**
    * Get all scheduled notifications (for debugging)
    */
   async getAllScheduledNotifications(): Promise<Notifications.NotificationRequest[]> {

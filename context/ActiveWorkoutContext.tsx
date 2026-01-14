@@ -8,6 +8,7 @@ import React, {
   useRef,
 } from 'react';
 import { workoutService, WorkoutWithDetails, AutoProgressionResult } from '@/services/workout.service';
+import { notificationService } from '@/services/notification.service';
 
 interface WorkoutSet {
   id: string;
@@ -38,7 +39,7 @@ interface WorkoutExercise {
 
 interface RestTimer {
   isRunning: boolean;
-  remainingSeconds: number;
+  startTime: number | null; // Timestamp when timer started
   totalSeconds: number;
 }
 
@@ -60,8 +61,8 @@ type ActiveWorkoutAction =
   | { type: 'START_WORKOUT'; payload: WorkoutWithDetails }
   | { type: 'COMPLETE_SET'; payload: { exerciseIndex: number; setIndex: number; actualWeight: number; actualReps: number } }
   | { type: 'UPDATE_SET'; payload: { exerciseIndex: number; setIndex: number; updates: Partial<WorkoutSet> } }
-  | { type: 'START_REST_TIMER'; payload: { seconds: number } }
-  | { type: 'TICK_REST_TIMER' }
+  | { type: 'START_REST_TIMER'; payload: { seconds: number; startTime: number } }
+  | { type: 'UPDATE_REST_TIMER' } // Triggers recalculation of remaining time
   | { type: 'SKIP_REST_TIMER' }
   | { type: 'SET_CURRENT_EXERCISE'; payload: number }
   | { type: 'SET_CURRENT_SET'; payload: number }
@@ -80,7 +81,7 @@ const initialState: ActiveWorkoutState = {
   currentSetIndex: 0,
   restTimer: {
     isRunning: false,
-    remainingSeconds: 0,
+    startTime: null,
     totalSeconds: 0,
   },
   autoProgressionResults: [],
@@ -157,36 +158,38 @@ function activeWorkoutReducer(
         ...state,
         restTimer: {
           isRunning: true,
-          remainingSeconds: action.payload.seconds,
+          startTime: action.payload.startTime,
           totalSeconds: action.payload.seconds,
         },
       };
 
-    case 'TICK_REST_TIMER':
-      if (!state.restTimer.isRunning || state.restTimer.remainingSeconds <= 0) {
+    case 'UPDATE_REST_TIMER': {
+      // Calculate if timer has completed based on elapsed time
+      if (!state.restTimer.isRunning || !state.restTimer.startTime) {
+        return state;
+      }
+      const elapsed = Math.floor((Date.now() - state.restTimer.startTime) / 1000);
+      const remaining = state.restTimer.totalSeconds - elapsed;
+      if (remaining <= 0) {
         return {
           ...state,
           restTimer: {
-            ...state.restTimer,
             isRunning: false,
-            remainingSeconds: 0,
+            startTime: null,
+            totalSeconds: state.restTimer.totalSeconds,
           },
         };
       }
-      return {
-        ...state,
-        restTimer: {
-          ...state.restTimer,
-          remainingSeconds: state.restTimer.remainingSeconds - 1,
-        },
-      };
+      // Just return state to trigger re-render with new calculated time
+      return { ...state };
+    }
 
     case 'SKIP_REST_TIMER':
       return {
         ...state,
         restTimer: {
           isRunning: false,
-          remainingSeconds: 0,
+          startTime: null,
           totalSeconds: state.restTimer.totalSeconds,
         },
       };
@@ -236,6 +239,7 @@ function activeWorkoutReducer(
 
 interface ActiveWorkoutContextType {
   state: ActiveWorkoutState;
+  remainingSeconds: number; // Computed from startTime
   startWorkout: (routineId: string, programId?: string) => Promise<void>;
   completeSet: (
     exerciseIndex: number,
@@ -267,11 +271,16 @@ export function ActiveWorkoutProvider({ children }: ActiveWorkoutProviderProps) 
   const [state, dispatch] = useReducer(activeWorkoutReducer, initialState);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Handle rest timer
+  // Calculate remaining seconds from start time
+  const remainingSeconds = state.restTimer.isRunning && state.restTimer.startTime
+    ? Math.max(0, state.restTimer.totalSeconds - Math.floor((Date.now() - state.restTimer.startTime) / 1000))
+    : 0;
+
+  // Handle rest timer updates
   useEffect(() => {
-    if (state.restTimer.isRunning && state.restTimer.remainingSeconds > 0) {
+    if (state.restTimer.isRunning && state.restTimer.startTime) {
       timerRef.current = setInterval(() => {
-        dispatch({ type: 'TICK_REST_TIMER' });
+        dispatch({ type: 'UPDATE_REST_TIMER' });
       }, 1000);
     } else if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -283,7 +292,7 @@ export function ActiveWorkoutProvider({ children }: ActiveWorkoutProviderProps) 
         clearInterval(timerRef.current);
       }
     };
-  }, [state.restTimer.isRunning, state.restTimer.remainingSeconds]);
+  }, [state.restTimer.isRunning, state.restTimer.startTime]);
 
   const startWorkout = useCallback(async (routineId: string, programId?: string) => {
     const workout = await workoutService.startWorkout(routineId, programId);
@@ -316,9 +325,15 @@ export function ActiveWorkoutProvider({ children }: ActiveWorkoutProviderProps) 
         completed: true,
       });
 
-      // Auto-start rest timer
+      // Cancel any existing rest timer notification (in case logging another set early)
+      notificationService.cancelRestTimerNotification();
+
+      // Auto-start rest timer with notification
       if (set.restTime > 0) {
-        dispatch({ type: 'START_REST_TIMER', payload: { seconds: set.restTime } });
+        const startTime = Date.now();
+        dispatch({ type: 'START_REST_TIMER', payload: { seconds: set.restTime, startTime } });
+        // Schedule notification for when rest completes
+        notificationService.scheduleRestTimerNotification(set.restTime);
       }
     },
     [state.exercises]
@@ -332,11 +347,16 @@ export function ActiveWorkoutProvider({ children }: ActiveWorkoutProviderProps) 
   );
 
   const startRestTimer = useCallback((seconds: number) => {
-    dispatch({ type: 'START_REST_TIMER', payload: { seconds } });
+    const startTime = Date.now();
+    dispatch({ type: 'START_REST_TIMER', payload: { seconds, startTime } });
+    // Schedule notification for when rest completes
+    notificationService.scheduleRestTimerNotification(seconds);
   }, []);
 
   const skipRestTimer = useCallback(() => {
     dispatch({ type: 'SKIP_REST_TIMER' });
+    // Cancel the scheduled notification
+    notificationService.cancelRestTimerNotification();
   }, []);
 
   const setCurrentExercise = useCallback((index: number) => {
@@ -374,6 +394,7 @@ export function ActiveWorkoutProvider({ children }: ActiveWorkoutProviderProps) 
     <ActiveWorkoutContext.Provider
       value={{
         state,
+        remainingSeconds,
         startWorkout,
         completeSet,
         updateSet,

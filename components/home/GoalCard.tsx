@@ -41,7 +41,7 @@ export function GoalCard({ progress, onPress }: GoalCardProps) {
       <View className="flex-row justify-between mb-3">
         {DAYS.map((day, index) => {
           const isScheduled = progress.scheduledDays.includes(index);
-          const isPast = index < today;
+          const isCompleted = (progress.completedDays ?? []).includes(index);
           const isToday = index === today;
 
           return (
@@ -59,10 +59,10 @@ export function GoalCard({ progress, onPress }: GoalCardProps) {
               </Text>
               <View
                 className={`w-8 h-8 rounded-full items-center justify-center ${
-                  isScheduled
-                    ? isPast
-                      ? 'bg-green-500'
-                      : isToday
+                  isCompleted
+                    ? 'bg-green-500'
+                    : isScheduled
+                    ? isToday
                       ? 'bg-orange-500'
                       : isDark
                       ? 'bg-zinc-700'
@@ -70,8 +70,8 @@ export function GoalCard({ progress, onPress }: GoalCardProps) {
                     : 'bg-transparent'
                 }`}
               >
-                {isScheduled && isPast && <Check size={14} color="#ffffff" />}
-                {isScheduled && !isPast && (
+                {isCompleted && <Check size={14} color="#ffffff" />}
+                {!isCompleted && isScheduled && (
                   <View
                     className={`w-2 h-2 rounded-full ${
                       isToday ? 'bg-white' : isDark ? 'bg-zinc-500' : 'bg-zinc-400'

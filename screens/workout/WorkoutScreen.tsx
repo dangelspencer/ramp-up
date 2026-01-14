@@ -27,6 +27,7 @@ export default function WorkoutScreen() {
 
   const {
     state,
+    remainingSeconds,
     startWorkout,
     completeSet,
     skipRestTimer,
@@ -216,10 +217,10 @@ export default function WorkoutScreen() {
 
       <ScrollView className="flex-1 px-4">
         {/* Rest Timer */}
-        {state.restTimer.isRunning && (
+        {state.restTimer.isRunning && remainingSeconds > 0 && (
           <View className="mt-4">
             <RestTimer
-              remainingSeconds={state.restTimer.remainingSeconds}
+              remainingSeconds={remainingSeconds}
               totalSeconds={state.restTimer.totalSeconds}
               isRunning={state.restTimer.isRunning}
               onSkip={skipRestTimer}
