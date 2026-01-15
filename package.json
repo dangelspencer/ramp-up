@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "expo/AppEntry",
   "scripts": {
+    "clean": "rm -rf node_modules/.cache ios android; watchman watch-del-all 2>/dev/null || true;",
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
@@ -18,7 +19,7 @@
     "install:ios": "expo run:ios --configuration Release --device --no-bundler"
   },
   "dependencies": {
-    "@react-native-community/datetimepicker": "^8.4.4",
+    "@react-native-community/datetimepicker": "8.4.4",
     "@react-navigation/bottom-tabs": "^7.9.0",
     "@react-navigation/native": "^7.1.26",
     "@react-navigation/native-stack": "^7.9.0",
@@ -42,7 +43,7 @@
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
     "react-native-svg": "15.12.1",
-    "react-native-worklets": "^0.7.1",
+    "react-native-worklets": "0.5.1",
     "tailwindcss": "^3.4.19",
     "uuid": "^13.0.0"
   },
@@ -55,9 +56,9 @@
     "@typescript-eslint/parser": "^8.22.0",
     "drizzle-kit": "^0.30.5",
     "eslint": "^9.0.0",
-    "eslint-config-expo": "~8.0.1",
+    "eslint-config-expo": "~10.0.0",
     "jest": "^29.7.0",
-    "jest-expo": "~52.0.6",
+    "jest-expo": "~54.0.16",
     "ts-jest": "^29.4.6",
     "typescript": "~5.9.2"
   },
