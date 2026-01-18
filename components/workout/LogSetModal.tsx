@@ -13,6 +13,7 @@ interface LogSetModalProps {
   targetWeight: number;
   targetReps: number;
   percentageOfMax: number | null;
+  isBodyweight?: boolean;
 }
 
 export function LogSetModal({
@@ -23,6 +24,7 @@ export function LogSetModal({
   targetWeight,
   targetReps,
   percentageOfMax,
+  isBodyweight = false,
 }: LogSetModalProps) {
   const { effectiveTheme, settings } = useSettings();
   const isDark = effectiveTheme === 'dark';
@@ -58,22 +60,26 @@ export function LogSetModal({
         {/* Target info */}
         <View className={`p-3 rounded-lg ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
           <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-            Target: {targetWeight} {unitLabel} × {targetReps} reps
-            {percentageOfMax ? ` (${percentageOfMax}%)` : ''}
+            {isBodyweight 
+              ? `Target: ${targetReps} reps (bodyweight)`
+              : `Target: ${targetWeight} ${unitLabel} × ${targetReps} reps${percentageOfMax ? ` (${percentageOfMax}%)` : ''}`
+            }
           </Text>
         </View>
 
-        {/* Weight Input */}
-        <NumberInput
-          label={`Weight (${unitLabel})`}
-          value={weightInput}
-          onChangeValue={setWeightInput}
-          min={0}
-          max={2000}
-          allowDecimals
-          suffix={unitLabel}
-          isDark={isDark}
-        />
+        {/* Weight Input - hidden for bodyweight */}
+        {!isBodyweight && (
+          <NumberInput
+            label={`Weight (${unitLabel})`}
+            value={weightInput}
+            onChangeValue={setWeightInput}
+            min={0}
+            max={2000}
+            allowDecimals
+            suffix={unitLabel}
+            isDark={isDark}
+          />
+        )}
 
         {/* Reps Input */}
         <NumberInput

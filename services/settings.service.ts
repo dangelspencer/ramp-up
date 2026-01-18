@@ -25,6 +25,9 @@ export interface AppSettings {
   restTimerHaptic: boolean;
   healthKitEnabled: boolean;
   onboardingCompleted: boolean;
+  goalNotificationsEnabled: boolean;
+  goalNotificationDay: number;
+  goalNotificationTime: string;
 }
 
 function parseBoolean(value: string): boolean {
@@ -90,6 +93,9 @@ export const settingsService = {
       restTimerHaptic: parseBoolean(getValue('restTimerHaptic')),
       healthKitEnabled: parseBoolean(getValue('healthKitEnabled')),
       onboardingCompleted: parseBoolean(getValue('onboardingCompleted')),
+      goalNotificationsEnabled: parseBoolean(getValue('goalNotificationsEnabled')),
+      goalNotificationDay: parseNumber(getValue('goalNotificationDay')),
+      goalNotificationTime: getValue('goalNotificationTime'),
     };
   },
 

@@ -3,6 +3,8 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/db/client';
 import { goals, Goal } from '@/db/schema';
 import { workoutService } from './workout.service';
+import { notificationService } from './notification.service';
+import { settingsService } from './settings.service';
 
 export interface GoalProgress {
   workoutsThisWeek: number;
@@ -186,10 +188,17 @@ export const goalService = {
 
     const workoutsThisWeek = await workoutService.getWorkoutsThisWeek();
     const metGoal = workoutsThisWeek.length >= goal.workoutsPerWeek;
+    const justHitGoal = workoutsThisWeek.length === goal.workoutsPerWeek;
 
     if (metGoal) {
-      // Increment streak
-      await this.updateStreak(goal.id, (goal.currentStreak ?? 0) + 1);
+      // Increment streak only when we first hit the goal this week
+      if (justHitGoal) {
+        await this.updateStreak(goal.id, (goal.currentStreak ?? 0) + 1);
+        // Send immediate celebration notification
+        await notificationService.sendGoalAchievedNotification(workoutsThisWeek.length);
+      }
+      // Schedule celebration notification for the weekend
+      await this.scheduleWeeklyGoalNotification(true);
     } else {
       // Check if we're past all scheduled days this week
       const scheduledDays = JSON.parse(goal.scheduledDays) as number[];
@@ -199,7 +208,29 @@ export const goalService = {
       if (allScheduledDaysPassed && workoutsThisWeek.length < goal.workoutsPerWeek) {
         // Reset streak if we missed workouts
         await this.updateStreak(goal.id, 0);
+        // Schedule encouragement notification for the weekend
+        await this.scheduleWeeklyGoalNotification(false);
       }
+    }
+  },
+
+  /**
+   * Schedule the weekly goal notification based on success/failure
+   */
+  async scheduleWeeklyGoalNotification(succeeded: boolean): Promise<void> {
+    const settings = await settingsService.getAll();
+    
+    if (!settings.goalNotificationsEnabled) {
+      return;
+    }
+
+    const [hour, minute] = settings.goalNotificationTime.split(':').map(Number);
+    const dayOfWeek = settings.goalNotificationDay;
+
+    if (succeeded) {
+      await notificationService.scheduleGoalCelebrationNotification(dayOfWeek, hour, minute);
+    } else {
+      await notificationService.scheduleGoalEncouragementNotification(dayOfWeek, hour, minute);
     }
   },
 

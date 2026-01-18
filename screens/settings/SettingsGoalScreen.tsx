@@ -11,12 +11,15 @@ import {
   Trophy,
   Check,
   Trash2,
+  Bell,
 } from 'lucide-react-native';
 import { useSettings, useGoals } from '@/hooks';
-import { Card, Button } from '@/components/ui';
+import { Card, Button, Switch } from '@/components/ui';
 import { NumberInput } from '@/components/ui/Input';
 import { CircularProgress } from '@/components/ui/ProgressBar';
 import { ConfirmModal } from '@/components/ui/Modal';
+import { Select } from '@/components/ui/Select';
+import { TimePickerModal } from '@/components/ui/TimePicker';
 import { RootStackParamList } from '../../App';
 import { getDayName } from '@/utils/formatting';
 
@@ -34,7 +37,7 @@ const DAYS_OF_WEEK = [
 
 export default function SettingsGoalScreen() {
   const navigation = useNavigation<NavigationProp>();
-  const { effectiveTheme } = useSettings();
+  const { effectiveTheme, settings, updateSettings } = useSettings();
   const isDark = effectiveTheme === 'dark';
   const {
     activeGoal,
@@ -60,6 +63,12 @@ export default function SettingsGoalScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  
+  // Notification settings
+  const [goalNotificationsEnabled, setGoalNotificationsEnabled] = useState(settings.goalNotificationsEnabled);
+  const [goalNotificationDay, setGoalNotificationDay] = useState(settings.goalNotificationDay);
+  const [goalNotificationTime, setGoalNotificationTime] = useState(settings.goalNotificationTime);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   // Update form when activeGoal changes
   useEffect(() => {
@@ -76,8 +85,13 @@ export default function SettingsGoalScreen() {
 
   // Check for changes
   useEffect(() => {
+    const notificationSettingsChanged =
+      goalNotificationsEnabled !== settings.goalNotificationsEnabled ||
+      goalNotificationDay !== settings.goalNotificationDay ||
+      goalNotificationTime !== settings.goalNotificationTime;
+
     if (!activeGoal) {
-      setHasChanges(workoutsPerWeek !== null && scheduledDays.length > 0);
+      setHasChanges((workoutsPerWeek !== null && scheduledDays.length > 0) || notificationSettingsChanged);
       return;
     }
 
@@ -89,10 +103,11 @@ export default function SettingsGoalScreen() {
     const changed =
       workoutsPerWeek !== activeGoal.workoutsPerWeek ||
       daysChanged ||
-      totalWeeks !== activeGoal.totalWeeks;
+      totalWeeks !== activeGoal.totalWeeks ||
+      notificationSettingsChanged;
 
     setHasChanges(changed);
-  }, [workoutsPerWeek, scheduledDays, totalWeeks, activeGoal]);
+  }, [workoutsPerWeek, scheduledDays, totalWeeks, activeGoal, goalNotificationsEnabled, goalNotificationDay, goalNotificationTime, settings]);
 
   const toggleDay = (dayIndex: number) => {
     setScheduledDays((prev) => {
@@ -110,6 +125,13 @@ export default function SettingsGoalScreen() {
 
     try {
       setIsSaving(true);
+
+      // Save notification settings
+      await updateSettings({
+        goalNotificationsEnabled,
+        goalNotificationDay,
+        goalNotificationTime,
+      });
 
       if (activeGoal) {
         await updateGoal(activeGoal.id, {
@@ -132,6 +154,13 @@ export default function SettingsGoalScreen() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const formatTime12Hour = (time24: string) => {
+    const [hours, minutes] = time24.split(':').map(Number);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const hours12 = hours % 12 || 12;
+    return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
   const handleDelete = async () => {
@@ -325,6 +354,62 @@ export default function SettingsGoalScreen() {
             </Text>
           </Card>
 
+          {/* Notifications Card */}
+          <Card variant="elevated" className="mb-4">
+            <View className="flex-row items-center gap-2 mb-4">
+              <View className={`p-2 rounded-lg ${isDark ? 'bg-yellow-500/20' : 'bg-yellow-100'}`}>
+                <Bell size={20} color="#eab308" />
+              </View>
+              <View className="flex-1">
+                <Text className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                  Weekly Summary
+                </Text>
+                <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                  Get notified about your weekly progress
+                </Text>
+              </View>
+            </View>
+
+            <Switch
+              value={goalNotificationsEnabled}
+              onValueChange={setGoalNotificationsEnabled}
+              label="Enable notifications"
+              description="Receive a summary of your progress each week"
+            />
+
+            {goalNotificationsEnabled && (
+              <View className={`mt-4 pt-4 border-t ${isDark ? 'border-zinc-700' : 'border-zinc-200'}`}>
+                <View className="mb-4">
+                  <Text className={`text-sm font-medium mb-2 ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
+                    Notification Day
+                  </Text>
+                  <Select
+                    value={goalNotificationDay.toString()}
+                    onValueChange={(value) => setGoalNotificationDay(parseInt(value, 10))}
+                    options={DAYS_OF_WEEK.map((day) => ({
+                      value: day.index.toString(),
+                      label: getDayName(day.index),
+                    }))}
+                  />
+                </View>
+
+                <View>
+                  <Text className={`text-sm font-medium mb-2 ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
+                    Notification Time
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setShowTimePicker(true)}
+                    className={`p-4 rounded-lg ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}
+                  >
+                    <Text className={`text-center font-medium ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                      {formatTime12Hour(goalNotificationTime)}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          </Card>
+
           {/* Duration Card */}
           <Card variant="elevated" className="mb-4">
             <View className="flex-row items-center gap-2 mb-4">
@@ -396,6 +481,15 @@ export default function SettingsGoalScreen() {
         confirmText="Delete"
         cancelText="Cancel"
         variant="destructive"
+      />
+
+      {/* Time Picker Modal */}
+      <TimePickerModal
+        visible={showTimePicker}
+        onClose={() => setShowTimePicker(false)}
+        onSelect={setGoalNotificationTime}
+        initialTime={goalNotificationTime}
+        title="Notification Time"
       />
     </SafeAreaView>
   );

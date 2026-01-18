@@ -52,7 +52,7 @@ export default function RoutineScreen() {
   const [showEditSetModal, setShowEditSetModal] = useState(false);
   const [editingExerciseIndex, setEditingExerciseIndex] = useState<number | null>(null);
   const [editingSetIndex, setEditingSetIndex] = useState<number | null>(null);
-  const [setWeightType, setSetWeightType] = useState<'percentage' | 'fixed' | 'bar'>('percentage');
+  const [setWeightType, setSetWeightType] = useState<'percentage' | 'fixed' | 'bar' | 'bodyweight'>('percentage');
   const [setWeightValue, setSetWeightValue] = useState<number | null>(75);
   const [setReps, setSetReps] = useState<number | null>(5);
   const [setRestTime, setSetRestTime] = useState<number | null>(90);

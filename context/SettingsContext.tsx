@@ -27,6 +27,9 @@ const defaultSettings: AppSettings = {
   restTimerHaptic: true,
   healthKitEnabled: false,
   onboardingCompleted: false,
+  goalNotificationsEnabled: true,
+  goalNotificationDay: 0,
+  goalNotificationTime: '19:00',
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);

@@ -237,6 +237,12 @@ function activeWorkoutReducer(
   }
 }
 
+export interface CompleteSetResult {
+  exerciseComplete: boolean;
+  workoutComplete: boolean;
+  nextExerciseName: string | null;
+}
+
 interface ActiveWorkoutContextType {
   state: ActiveWorkoutState;
   remainingSeconds: number; // Computed from startTime
@@ -246,7 +252,7 @@ interface ActiveWorkoutContextType {
     setIndex: number,
     actualWeight: number,
     actualReps: number
-  ) => Promise<void>;
+  ) => Promise<CompleteSetResult>;
   updateSet: (
     exerciseIndex: number,
     setIndex: number,
@@ -308,9 +314,11 @@ export function ActiveWorkoutProvider({ children }: ActiveWorkoutProviderProps) 
       setIndex: number,
       actualWeight: number,
       actualReps: number
-    ) => {
+    ): Promise<CompleteSetResult> => {
       const set = state.exercises[exerciseIndex]?.sets[setIndex];
-      if (!set) return;
+      if (!set) {
+        return { exerciseComplete: false, workoutComplete: false, nextExerciseName: null };
+      }
 
       // Update local state
       dispatch({
@@ -328,13 +336,34 @@ export function ActiveWorkoutProvider({ children }: ActiveWorkoutProviderProps) 
       // Cancel any existing rest timer notification (in case logging another set early)
       notificationService.cancelRestTimerNotification();
 
-      // Auto-start rest timer with notification
-      if (set.restTime > 0) {
+      // Check if all sets in this exercise are complete (including the one we just completed)
+      const currentExercise = state.exercises[exerciseIndex];
+      const exerciseComplete = currentExercise.sets.every(
+        (s, idx) => s.completed || idx === setIndex
+      );
+
+      // Check if all sets in all exercises are complete
+      const workoutComplete = state.exercises.every((exercise, exIdx) =>
+        exercise.sets.every((s, sIdx) => 
+          s.completed || (exIdx === exerciseIndex && sIdx === setIndex)
+        )
+      );
+
+      // Get next exercise name if available
+      const hasNextExercise = exerciseIndex < state.exercises.length - 1;
+      const nextExerciseName = hasNextExercise 
+        ? state.exercises[exerciseIndex + 1].exercise.name 
+        : null;
+
+      // Auto-start rest timer with notification (only if workout isn't complete)
+      if (set.restTime > 0 && !workoutComplete) {
         const startTime = Date.now();
         dispatch({ type: 'START_REST_TIMER', payload: { seconds: set.restTime, startTime } });
         // Schedule notification for when rest completes
         notificationService.scheduleRestTimerNotification(set.restTime);
       }
+
+      return { exerciseComplete, workoutComplete, nextExerciseName };
     },
     [state.exercises]
   );
@@ -370,6 +399,10 @@ export function ActiveWorkoutProvider({ children }: ActiveWorkoutProviderProps) 
   const completeWorkout = useCallback(async () => {
     if (!state.workoutId) return [];
 
+    // Cancel any running rest timer and its notification
+    dispatch({ type: 'SKIP_REST_TIMER' });
+    notificationService.cancelRestTimerNotification();
+
     dispatch({ type: 'START_COMPLETING' });
 
     const progressionResults = await workoutService.completeWorkout(state.workoutId);
@@ -380,6 +413,10 @@ export function ActiveWorkoutProvider({ children }: ActiveWorkoutProviderProps) 
   }, [state.workoutId]);
 
   const cancelWorkout = useCallback(async () => {
+    // Cancel any running rest timer and its notification
+    dispatch({ type: 'SKIP_REST_TIMER' });
+    notificationService.cancelRestTimerNotification();
+
     if (state.workoutId) {
       await workoutService.delete(state.workoutId);
     }

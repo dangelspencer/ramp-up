@@ -29,7 +29,7 @@ interface ExerciseEntry {
 
 interface SetEntry {
   id: string;
-  weightType: 'percentage' | 'fixed' | 'bar';
+  weightType: 'percentage' | 'fixed' | 'bar' | 'bodyweight';
   weightValue: number;
   reps: number;
   restTime: number | null;
@@ -354,20 +354,21 @@ export default function RoutineDetailScreen() {
                         value={set.weightType}
                         onValueChange={(value) =>
                           handleUpdateSet(exercise.id, set.id, {
-                            weightType: value as 'percentage' | 'fixed' | 'bar',
+                            weightType: value as 'percentage' | 'fixed' | 'bar' | 'bodyweight',
                           })
                         }
                         options={[
-                          { value: 'percentage', label: '% of Max' },
+                          { value: 'percentage', label: '%' },
                           { value: 'fixed', label: 'Fixed' },
-                          { value: 'bar', label: 'Bar Only' },
+                          { value: 'bar', label: 'Bar' },
+                          { value: 'bodyweight', label: 'BW' },
                         ]}
                         isDark={isDark}
                         className="mb-3"
                       />
 
                       <View className="flex-row gap-3">
-                        {set.weightType !== 'bar' && (
+                        {set.weightType !== 'bar' && set.weightType !== 'bodyweight' && (
                           <View className="flex-1">
                             <NumberInput
                               label={set.weightType === 'percentage' ? 'Percentage' : 'Weight'}
@@ -614,6 +615,8 @@ export default function RoutineDetailScreen() {
                             ? `${set.weightValue}%`
                             : set.weightType === 'bar'
                             ? 'Bar only'
+                            : set.weightType === 'bodyweight'
+                            ? 'Bodyweight'
                             : formatWeight(set.weightValue, settings.units)}{' '}
                           x {set.reps} reps
                         </Text>

@@ -222,55 +222,106 @@ export default function ExerciseDetailScreen() {
           {isEditing ? (
             <>
               {/* Edit Mode */}
-              <View className="mb-6">
+              {/* Exercise Name Card */}
+              <Card variant="elevated" className="mb-4 mt-4">
+                <View className="flex-row items-center gap-2 mb-4">
+                  <View className={`p-2 rounded-lg ${isDark ? 'bg-orange-500/20' : 'bg-orange-100'}`}>
+                    <Dumbbell size={20} color="#f97316" />
+                  </View>
+                  <View>
+                    <Text className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                      Exercise Name
+                    </Text>
+                  </View>
+                </View>
                 <Input
-                  label="Exercise Name"
                   value={editName}
                   onChangeText={setEditName}
                   placeholder="e.g., Bench Press"
                 />
-              </View>
+              </Card>
 
-              <View className="mb-6 mt-4">
-                <NumberInput
-                  label={`Current Max Weight (${unitLabel})`}
-                  value={editMaxWeight}
-                  onChangeValue={setEditMaxWeight}
-                  min={0}
-                  allowDecimals
-                  placeholder="135"
-                  suffix={unitLabel}
-                />
-              </View>
-
-              <View className="mb-6 mt-4">
-                <Text className={`text-sm font-medium mb-2 ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
-                  Weight Increment
-                </Text>
-                <SegmentedControl
-                  value={editWeightIncrement}
-                  onValueChange={(value) => setEditWeightIncrement(value as '2.5' | '5')}
-                  options={[
-                    { value: '2.5', label: `2.5 ${unitLabel}` },
-                    { value: '5', label: `5 ${unitLabel}` },
-                  ]}
-                  isDark={isDark}
-                />
-              </View>
-
-              <View className="mb-6 mt-4">
+              {/* Equipment Card - moved up so it controls visibility of weight settings */}
+              <Card variant="elevated" className="mb-4">
+                <View className="flex-row items-center gap-2 mb-4">
+                  <View className={`p-2 rounded-lg ${isDark ? 'bg-purple-500/20' : 'bg-purple-100'}`}>
+                    <Dumbbell size={20} color="#a855f7" />
+                  </View>
+                  <View>
+                    <Text className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                      Equipment
+                    </Text>
+                    <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                      {editBarbellId ? 'Barbell used for this exercise' : 'Bodyweight or dumbbell exercise'}
+                    </Text>
+                  </View>
+                </View>
                 <Select
-                  label="Barbell"
                   value={editBarbellId}
                   onValueChange={setEditBarbellId}
                   options={barbellOptions}
-                  placeholder="Select a barbell (optional)"
+                  placeholder="Select equipment type"
                 />
-              </View>
+              </Card>
 
-              <View className="mb-6 mt-4">
+              {/* Max Weight & Increment Card - only show for barbell exercises */}
+              {editBarbellId !== '' && (
+                <Card variant="elevated" className="mb-4">
+                  <View className="flex-row items-center gap-2 mb-4">
+                    <View className={`p-2 rounded-lg ${isDark ? 'bg-blue-500/20' : 'bg-blue-100'}`}>
+                      <TrendingUp size={20} color="#3b82f6" />
+                    </View>
+                    <View>
+                      <Text className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                        Weight Settings
+                      </Text>
+                      <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                        Your current max and progression increment
+                      </Text>
+                    </View>
+                  </View>
+                  <NumberInput
+                    label={`Current Max Weight (${unitLabel})`}
+                    value={editMaxWeight}
+                    onChangeValue={setEditMaxWeight}
+                    min={0}
+                    allowDecimals
+                    placeholder="135"
+                    suffix={unitLabel}
+                  />
+                  <View className="mt-4">
+                    <Text className={`text-sm font-medium mb-2 ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
+                      Weight Increment
+                    </Text>
+                    <SegmentedControl
+                      value={editWeightIncrement}
+                      onValueChange={(value) => setEditWeightIncrement(value as '2.5' | '5')}
+                      options={[
+                        { value: '2.5', label: `2.5 ${unitLabel}` },
+                        { value: '5', label: `5 ${unitLabel}` },
+                      ]}
+                      isDark={isDark}
+                    />
+                  </View>
+                </Card>
+              )}
+
+              {/* Rest Time Card */}
+              <Card variant="elevated" className="mb-4">
+                <View className="flex-row items-center gap-2 mb-4">
+                  <View className={`p-2 rounded-lg ${isDark ? 'bg-green-500/20' : 'bg-green-100'}`}>
+                    <Clock size={20} color="#22c55e" />
+                  </View>
+                  <View>
+                    <Text className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                      Rest Time
+                    </Text>
+                    <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                      Default rest between sets
+                    </Text>
+                  </View>
+                </View>
                 <NumberInput
-                  label="Default Rest Time"
                   value={editDefaultRestTime}
                   onChangeValue={setEditDefaultRestTime}
                   min={0}
@@ -278,16 +329,19 @@ export default function ExerciseDetailScreen() {
                   placeholder="90"
                   suffix="sec"
                 />
-              </View>
-
-              <Card className="mb-6 mt-4">
-                <Switch
-                  value={editAutoProgression}
-                  onValueChange={setEditAutoProgression}
-                  label="Auto Progression"
-                  description="Automatically increase weight when you complete all sets"
-                />
               </Card>
+
+              {/* Auto Progression Card - only show for barbell exercises */}
+              {editBarbellId !== '' && (
+                <Card variant="elevated" className="mb-4">
+                  <Switch
+                    value={editAutoProgression}
+                    onValueChange={setEditAutoProgression}
+                    label="Auto Progression"
+                    description="Automatically increase weight when you complete all sets"
+                  />
+                </Card>
+              )}
             </>
           ) : (
             <>

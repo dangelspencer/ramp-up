@@ -263,6 +263,108 @@ export const notificationService = {
   },
 
   /**
+   * Schedule weekly goal celebration notification
+   */
+  async scheduleGoalCelebrationNotification(
+    dayOfWeek: number,
+    hour: number,
+    minute: number
+  ): Promise<void> {
+    const settings = await settingsService.getAll();
+    if (!settings.notificationsEnabled || !settings.goalNotificationsEnabled) {
+      return;
+    }
+
+    // Cancel any existing goal notification first
+    await this.cancelGoalNotifications();
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Goal Achieved!',
+        body: "You crushed it this week! Keep the momentum going!",
+        sound: true,
+        data: { type: 'goal_celebration' },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+        weekday: dayOfWeek + 1, // Expo uses 1-7 (Sunday = 1)
+        hour,
+        minute,
+      },
+      identifier: 'goal-celebration',
+    });
+  },
+
+  /**
+   * Schedule weekly goal encouragement notification (for when goal is missed)
+   */
+  async scheduleGoalEncouragementNotification(
+    dayOfWeek: number,
+    hour: number,
+    minute: number
+  ): Promise<void> {
+    const settings = await settingsService.getAll();
+    if (!settings.notificationsEnabled || !settings.goalNotificationsEnabled) {
+      return;
+    }
+
+    // Cancel any existing goal notification first
+    await this.cancelGoalNotifications();
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'New Week, Fresh Start!',
+        body: "Let's make this week count. You've got this!",
+        sound: true,
+        data: { type: 'goal_encouragement' },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+        weekday: dayOfWeek + 1, // Expo uses 1-7 (Sunday = 1)
+        hour,
+        minute,
+      },
+      identifier: 'goal-encouragement',
+    });
+  },
+
+  /**
+   * Send immediate goal achieved notification
+   */
+  async sendGoalAchievedNotification(workoutsCompleted: number): Promise<void> {
+    const settings = await settingsService.getAll();
+    if (!settings.notificationsEnabled || !settings.goalNotificationsEnabled) {
+      return;
+    }
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Weekly Goal Achieved!',
+        body: `Amazing! You completed ${workoutsCompleted} workout${workoutsCompleted !== 1 ? 's' : ''} this week. Keep up the great work!`,
+        sound: true,
+        data: { type: 'goal_achieved' },
+      },
+      trigger: null, // Send immediately
+    });
+  },
+
+  /**
+   * Cancel all goal-related notifications
+   */
+  async cancelGoalNotifications(): Promise<void> {
+    try {
+      await Notifications.cancelScheduledNotificationAsync('goal-celebration');
+    } catch {
+      // Notification may not exist, ignore error
+    }
+    try {
+      await Notifications.cancelScheduledNotificationAsync('goal-encouragement');
+    } catch {
+      // Notification may not exist, ignore error
+    }
+  },
+
+  /**
    * Get all scheduled notifications (for debugging)
    */
   async getAllScheduledNotifications(): Promise<Notifications.NotificationRequest[]> {

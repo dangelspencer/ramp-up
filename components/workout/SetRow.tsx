@@ -15,6 +15,7 @@ interface SetRowProps {
   onLogPress: () => void;
   onRowPress?: () => void;
   disabled?: boolean;
+  isBodyweight?: boolean;
 }
 
 export function SetRow({
@@ -28,6 +29,7 @@ export function SetRow({
   onLogPress,
   onRowPress,
   disabled = false,
+  isBodyweight = false,
 }: SetRowProps) {
   const { effectiveTheme, settings } = useSettings();
   const isDark = effectiveTheme === 'dark';
@@ -57,17 +59,30 @@ export function SetRow({
 
       {/* Weight and Reps */}
       <View className="flex-1 flex-row items-center">
-        <Text className={`text-lg font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-          {formatWeight(displayWeight, settings.units)}
-        </Text>
-        <Text className={`mx-2 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>×</Text>
-        <Text className={`text-lg font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
-          {displayReps}
-        </Text>
-        {percentageOfMax && (
-          <Text className={`ml-2 text-sm ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-            ({percentageOfMax}%)
-          </Text>
+        {isBodyweight ? (
+          <>
+            <Text className={`text-lg font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+              {displayReps} reps
+            </Text>
+            <Text className={`ml-2 text-sm ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+              (bodyweight)
+            </Text>
+          </>
+        ) : (
+          <>
+            <Text className={`text-lg font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+              {formatWeight(displayWeight, settings.units)}
+            </Text>
+            <Text className={`mx-2 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>×</Text>
+            <Text className={`text-lg font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+              {displayReps}
+            </Text>
+            {percentageOfMax && (
+              <Text className={`ml-2 text-sm ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                ({percentageOfMax}%)
+              </Text>
+            )}
+          </>
         )}
       </View>
 

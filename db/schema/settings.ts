@@ -22,6 +22,9 @@ export const settings = sqliteTable('settings', {
 // - restTimerHaptic: "true" | "false"
 // - healthKitEnabled: "true" | "false"
 // - onboardingCompleted: "true" | "false"
+// - goalNotificationsEnabled: "true" | "false"
+// - goalNotificationDay: "0" - "6" (Sunday-Saturday)
+// - goalNotificationTime: "19:00"
 
 export type Setting = typeof settings.$inferSelect;
 export type NewSetting = typeof settings.$inferInsert;
@@ -43,7 +46,10 @@ export type SettingKey =
   | 'restTimerAudio'
   | 'restTimerHaptic'
   | 'healthKitEnabled'
-  | 'onboardingCompleted';
+  | 'onboardingCompleted'
+  | 'goalNotificationsEnabled'
+  | 'goalNotificationDay'
+  | 'goalNotificationTime';
 
 export const defaultSettings: Record<SettingKey, string> = {
   theme: 'system',
@@ -62,4 +68,7 @@ export const defaultSettings: Record<SettingKey, string> = {
   restTimerHaptic: 'true',
   healthKitEnabled: 'false',
   onboardingCompleted: 'false',
+  goalNotificationsEnabled: 'true',
+  goalNotificationDay: '0', // Sunday
+  goalNotificationTime: '19:00', // 7 PM
 };

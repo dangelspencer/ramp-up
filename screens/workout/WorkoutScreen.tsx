@@ -3,11 +3,12 @@ import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Check, ArrowRight, Trophy } from 'lucide-react-native';
 
 import { RootStackParamList } from '../../App';
 import { useSettings, useActiveWorkout } from '@/hooks';
 import { ConfirmModal } from '@/components/ui/Modal';
+import { useToast } from '@/components/ui/Toast';
 import { SetRow } from '@/components/workout/SetRow';
 import { LogSetModal } from '@/components/workout/LogSetModal';
 import { PlateCalculatorModal } from '@/components/workout/PlateCalculator';
@@ -35,6 +36,8 @@ export default function WorkoutScreen() {
     completeWorkout,
     cancelWorkout,
   } = useActiveWorkout();
+
+  const { showToast } = useToast();
 
   const [isLoading, setIsLoading] = useState(true);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -97,10 +100,35 @@ export default function WorkoutScreen() {
   const handleLogSet = useCallback(
     async (weight: number, reps: number) => {
       if (logModalState.setIndex !== null) {
-        await completeSet(state.currentExerciseIndex, logModalState.setIndex, weight, reps);
+        const result = await completeSet(state.currentExerciseIndex, logModalState.setIndex, weight, reps);
+        
+        if (result.workoutComplete) {
+          // Show workout complete toast and auto-finish
+          showToast({
+            message: 'Workout Complete!',
+            variant: 'success',
+            duration: 2000,
+            icon: <Trophy size={20} color="#bbf7d0" />,
+          });
+          // Auto-complete the workout after a brief delay
+          setTimeout(async () => {
+            await completeWorkout();
+            navigation.replace('WorkoutComplete');
+          }, 500);
+        } else if (result.exerciseComplete && result.nextExerciseName) {
+          // Show advancing toast and move to next exercise immediately
+          showToast({
+            message: `Next up: ${result.nextExerciseName}`,
+            variant: 'exercise',
+            duration: 2000,
+            icon: <ArrowRight size={20} color="#fed7aa" />,
+          });
+          // Advance immediately
+          setCurrentExercise(state.currentExerciseIndex + 1);
+        }
       }
     },
-    [completeSet, logModalState.setIndex, state.currentExerciseIndex]
+    [completeSet, logModalState.setIndex, state.currentExerciseIndex, showToast, completeWorkout, navigation, setCurrentExercise]
   );
 
   const handlePreviousExercise = useCallback(() => {
@@ -258,22 +286,29 @@ export default function WorkoutScreen() {
         </View>
 
         {/* Sets */}
-        <View className="mt-4 gap-2 mb-8">
-          {currentExercise?.sets.map((set, setIndex) => (
-            <SetRow
-              key={set.id}
-              setNumber={setIndex + 1}
-              targetWeight={set.targetWeight}
-              targetReps={set.targetReps}
-              actualWeight={set.actualWeight}
-              actualReps={set.actualReps}
-              completed={set.completed}
-              percentageOfMax={set.percentageOfMax}
-              onLogPress={() => handleOpenLogModal(setIndex)}
-              onRowPress={() => handleOpenPlateCalc(set.completed ? (set.actualWeight ?? set.targetWeight) : set.targetWeight)}
-            />
-          ))}
+        <View className="mt-4 gap-2">
+          {currentExercise?.sets.map((set, setIndex) => {
+            const isBodyweight = set.targetWeight === 0 && set.percentageOfMax === null;
+            return (
+              <SetRow
+                key={set.id}
+                setNumber={setIndex + 1}
+                targetWeight={set.targetWeight}
+                targetReps={set.targetReps}
+                actualWeight={set.actualWeight}
+                actualReps={set.actualReps}
+                completed={set.completed}
+                percentageOfMax={set.percentageOfMax}
+                isBodyweight={isBodyweight}
+                onLogPress={() => handleOpenLogModal(setIndex)}
+                onRowPress={isBodyweight ? undefined : () => handleOpenPlateCalc(set.completed ? (set.actualWeight ?? set.targetWeight) : set.targetWeight)}
+              />
+            );
+          })}
         </View>
+
+        {/* Bottom spacer for safe area */}
+        <View className="h-24" />
       </ScrollView>
 
       {/* Log Set Modal */}
@@ -286,6 +321,7 @@ export default function WorkoutScreen() {
           targetWeight={setBeingLogged.targetWeight}
           targetReps={setBeingLogged.targetReps}
           percentageOfMax={setBeingLogged.percentageOfMax}
+          isBodyweight={setBeingLogged.targetWeight === 0 && setBeingLogged.percentageOfMax === null}
         />
       )}
 

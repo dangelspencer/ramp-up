@@ -3,6 +3,7 @@ import { DatabaseProvider, useDatabase } from './DatabaseContext';
 import { SettingsProvider } from './SettingsContext';
 import { ActiveWorkoutProvider } from './ActiveWorkoutContext';
 import { OnboardingProvider } from './OnboardingContext';
+import { ToastProvider } from '@/components/ui/Toast';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { audio } from '@/utils/audio';
 
@@ -41,11 +42,13 @@ export function AppProvider({ children }: AppProviderProps) {
     <DatabaseProvider>
       <DatabaseGate>
         <SettingsProvider>
-          <ActiveWorkoutProvider>
-            <OnboardingProvider>
-              {children}
-            </OnboardingProvider>
-          </ActiveWorkoutProvider>
+          <ToastProvider>
+            <ActiveWorkoutProvider>
+              <OnboardingProvider>
+                {children}
+              </OnboardingProvider>
+            </ActiveWorkoutProvider>
+          </ToastProvider>
         </SettingsProvider>
       </DatabaseGate>
     </DatabaseProvider>

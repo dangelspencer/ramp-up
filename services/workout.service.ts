@@ -116,6 +116,9 @@ export const workoutService = {
         } else if (set.weightType === 'bar') {
           // Just the bar weight, no additional plates
           targetWeight = exercise.barbellId ? barbellWeight : 0;
+        } else if (set.weightType === 'bodyweight') {
+          // Bodyweight exercise - no external weight
+          targetWeight = 0;
         } else {
           targetWeight = set.weightValue;
         }

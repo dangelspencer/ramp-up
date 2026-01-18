@@ -38,7 +38,7 @@ export const routineExerciseSets = sqliteTable('routine_exercise_sets', {
     .notNull()
     .references(() => routineExercises.id, { onDelete: 'cascade' }),
   orderIndex: integer('order_index').notNull(),
-  weightType: text('weight_type', { enum: ['percentage', 'fixed', 'bar'] }).notNull(),
+  weightType: text('weight_type', { enum: ['percentage', 'fixed', 'bar', 'bodyweight'] }).notNull(),
   weightValue: real('weight_value').notNull(), // percentage (60) or absolute (45)
   reps: integer('reps').notNull(),
   restTime: integer('rest_time'), // null = use exercise default
