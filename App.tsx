@@ -7,6 +7,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Home, Clock, Library, Settings } from 'lucide-react-native';
 
 import { AppProvider } from '@/context/AppContext';
@@ -224,13 +225,15 @@ export default function App() {
   const colorScheme = useColorScheme();
 
   return (
-    <NavigationContainer>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <AppProvider>
-            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-            <RootNavigator />
-        </AppProvider>
-      </GestureHandlerRootView>
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <AppProvider>
+              <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+              <RootNavigator />
+          </AppProvider>
+        </GestureHandlerRootView>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
