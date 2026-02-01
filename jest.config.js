@@ -7,6 +7,7 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
     '^expo-crypto$': '<rootDir>/__tests__/__mocks__/expo-crypto.ts',
+    '^expo-notifications$': '<rootDir>/__tests__/__mocks__/expo-notifications.ts',
   },
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {
