@@ -12,6 +12,8 @@ export const exercises = sqliteTable('exercises', {
   maxWeight: real('max_weight').notNull(), // in lbs
   weightIncrement: real('weight_increment').notNull().default(5), // 2.5 or 5
   autoProgression: integer('auto_progression', { mode: 'boolean' }).default(true),
+  progressionInterval: integer('progression_interval').notNull().default(1), // number of successful workouts before progressing
+  successfulWorkouts: integer('successful_workouts').notNull().default(0), // count of successful workouts since last progression
   barbellId: text('barbell_id').references(() => barbells.id),
   defaultRestTime: integer('default_rest_time').default(90), // seconds
   createdAt: text('created_at')

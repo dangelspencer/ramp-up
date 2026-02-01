@@ -44,6 +44,7 @@ export default function ExerciseDetailScreen() {
   const [editMaxWeight, setEditMaxWeight] = useState<number | null>(null);
   const [editWeightIncrement, setEditWeightIncrement] = useState<'2.5' | '5'>('5');
   const [editAutoProgression, setEditAutoProgression] = useState(true);
+  const [editProgressionInterval, setEditProgressionInterval] = useState<number>(1);
   const [editBarbellId, setEditBarbellId] = useState<string>('');
   const [editDefaultRestTime, setEditDefaultRestTime] = useState<number | null>(90);
 
@@ -72,6 +73,7 @@ export default function ExerciseDetailScreen() {
     setEditWeightIncrement(incrementInUserUnits <= 2.5 ? '2.5' : '5');
 
     setEditAutoProgression(data.autoProgression ?? true);
+    setEditProgressionInterval(data.progressionInterval ?? 1);
     setEditBarbellId(data.barbellId ?? '');
     setEditDefaultRestTime(data.defaultRestTime ?? 90);
   };
@@ -123,6 +125,7 @@ export default function ExerciseDetailScreen() {
         maxWeight: weightInLbs,
         weightIncrement: incrementInLbs,
         autoProgression: editAutoProgression,
+        progressionInterval: editProgressionInterval,
         barbellId: editBarbellId || null,
         defaultRestTime: editDefaultRestTime ?? 90,
       });
@@ -340,6 +343,26 @@ export default function ExerciseDetailScreen() {
                     label="Auto Progression"
                     description="Automatically increase weight when you complete all sets"
                   />
+                  {editAutoProgression && (
+                    <View className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                      <Text className={`text-sm font-medium mb-2 ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
+                        Progression Interval
+                      </Text>
+                      <Text className={`text-xs mb-3 ${isDark ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                        Number of successful workouts before increasing weight
+                      </Text>
+                      <SegmentedControl
+                        value={String(editProgressionInterval)}
+                        onValueChange={(value) => setEditProgressionInterval(Number(value))}
+                        options={[
+                          { value: '1', label: 'Every time' },
+                          { value: '2', label: '2 workouts' },
+                          { value: '3', label: '3 workouts' },
+                        ]}
+                        isDark={isDark}
+                      />
+                    </View>
+                  )}
                 </Card>
               )}
             </>
@@ -439,7 +462,9 @@ export default function ExerciseDetailScreen() {
               <Card variant="outlined" className="mb-6">
                 <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-600'}`}>
                   {exercise.autoProgression
-                    ? `When you successfully complete all sets at ${formatWeight(displayMaxWeight, settings.units)}, the weight will automatically increase to ${formatWeight(displayMaxWeight + displayIncrement, settings.units)}.`
+                    ? exercise.progressionInterval > 1
+                      ? `Progress after ${exercise.progressionInterval} successful workouts. Currently ${exercise.successfulWorkouts}/${exercise.progressionInterval} completed. Weight will increase from ${formatWeight(displayMaxWeight, settings.units)} to ${formatWeight(displayMaxWeight + displayIncrement, settings.units)}.`
+                      : `When you successfully complete all sets at ${formatWeight(displayMaxWeight, settings.units)}, the weight will automatically increase to ${formatWeight(displayMaxWeight + displayIncrement, settings.units)}.`
                     : 'Auto progression is disabled. Update the max weight manually when you are ready to progress.'}
                 </Text>
               </Card>

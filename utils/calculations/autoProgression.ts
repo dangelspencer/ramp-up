@@ -2,6 +2,8 @@ export interface ExerciseConfig {
   maxWeight: number;
   weightIncrement: number;
   autoProgression: boolean;
+  progressionInterval?: number; // how many successful workouts before progressing (default 1)
+  successfulWorkouts?: number; // current count of successful workouts
 }
 
 export interface CompletedSet {
@@ -16,6 +18,9 @@ export interface AutoProgressionResult {
   newMaxWeight: number;
   increment: number;
   reason?: string;
+  // When workout was successful but interval not yet reached
+  wasSuccessful?: boolean;
+  newSuccessfulWorkouts?: number;
 }
 
 /**
@@ -34,10 +39,15 @@ export function checkAutoProgression(
   exercise: ExerciseConfig,
   completedSets: CompletedSet[]
 ): AutoProgressionResult {
+  const progressionInterval = exercise.progressionInterval ?? 1;
+  const currentSuccessfulWorkouts = exercise.successfulWorkouts ?? 0;
+
   const noProgress = {
     shouldProgress: false,
     newMaxWeight: exercise.maxWeight,
     increment: 0,
+    wasSuccessful: false,
+    newSuccessfulWorkouts: currentSuccessfulWorkouts,
   };
 
   // Check if auto-progression is enabled
@@ -68,12 +78,30 @@ export function checkAutoProgression(
     return { ...noProgress, reason: 'Not all 100% sets achieved target reps' };
   }
 
-  // All conditions met - progress!
+  // Workout was successful - increment the counter
+  const newSuccessfulWorkouts = currentSuccessfulWorkouts + 1;
+
+  // Check if we've reached the progression interval
+  if (newSuccessfulWorkouts >= progressionInterval) {
+    // Time to progress! Reset counter to 0
+    return {
+      shouldProgress: true,
+      newMaxWeight: exercise.maxWeight + exercise.weightIncrement,
+      increment: exercise.weightIncrement,
+      reason: `Completed ${progressionInterval} successful workout${progressionInterval > 1 ? 's' : ''} - progressing weight`,
+      wasSuccessful: true,
+      newSuccessfulWorkouts: 0, // Reset on progression
+    };
+  }
+
+  // Successful but not yet ready to progress
   return {
-    shouldProgress: true,
-    newMaxWeight: exercise.maxWeight + exercise.weightIncrement,
-    increment: exercise.weightIncrement,
-    reason: 'All 100% sets completed with target reps',
+    shouldProgress: false,
+    newMaxWeight: exercise.maxWeight,
+    increment: 0,
+    reason: `Successful workout ${newSuccessfulWorkouts}/${progressionInterval}`,
+    wasSuccessful: true,
+    newSuccessfulWorkouts,
   };
 }
 

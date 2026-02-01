@@ -35,6 +35,8 @@ export interface WorkoutExerciseWithDetails {
     maxWeight: number;
     weightIncrement: number;
     autoProgression: boolean | null;
+    progressionInterval: number;
+    successfulWorkouts: number;
     barbellId: string | null;
   };
   sets: WorkoutSetWithDetails[];
@@ -169,6 +171,8 @@ export const workoutService = {
           maxWeight: exercises.maxWeight,
           weightIncrement: exercises.weightIncrement,
           autoProgression: exercises.autoProgression,
+          progressionInterval: exercises.progressionInterval,
+          successfulWorkouts: exercises.successfulWorkouts,
           barbellId: exercises.barbellId,
         },
       })
@@ -255,19 +259,29 @@ export const workoutService = {
         maxWeight: exercise.maxWeight,
         weightIncrement: exercise.weightIncrement,
         autoProgression: true,
+        progressionInterval: exercise.progressionInterval,
+        successfulWorkouts: exercise.successfulWorkouts,
       };
 
       const result = checkAutoProgression(exerciseConfig, completedSets);
 
       if (result.shouldProgress) {
-        // Update the exercise max weight
-        await exerciseService.updateMaxWeight(exercise.id, result.newMaxWeight);
+        // Update the exercise max weight and reset successful workouts counter
+        await exerciseService.update(exercise.id, {
+          maxWeight: result.newMaxWeight,
+          successfulWorkouts: 0,
+        });
 
         progressionResults.push({
           exerciseId: exercise.id,
           exerciseName: exercise.name,
           previousMax: exercise.maxWeight,
           newMax: result.newMaxWeight,
+        });
+      } else if (result.wasSuccessful && result.newSuccessfulWorkouts !== undefined) {
+        // Update the successful workouts counter (but don't progress yet)
+        await exerciseService.update(exercise.id, {
+          successfulWorkouts: result.newSuccessfulWorkouts,
         });
       }
     }
