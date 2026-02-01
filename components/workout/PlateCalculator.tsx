@@ -16,7 +16,7 @@ const PLATE_COLORS: { [key: number]: string } = {
   2.5: '#ec4899', // pink
 };
 
-interface PlateVisualizationProps {
+export interface PlateVisualizationProps {
   plates: Array<{ weight: number; count: number }>;
   barWeight: number;
 }
@@ -38,7 +38,7 @@ function getPlateSize(weight: number): { height: number; width: number } {
   };
 }
 
-function PlateVisualization({ plates, barWeight }: PlateVisualizationProps) {
+export function PlateVisualization({ plates, barWeight }: PlateVisualizationProps) {
   const { effectiveTheme, settings } = useSettings();
   const isDark = effectiveTheme === 'dark';
   const unitLabel = settings.units === 'imperial' ? 'lbs' : 'kg';
@@ -245,6 +245,69 @@ export function PlateCalculatorModal({
         </View>
       </ScrollView>
     </Modal>
+  );
+}
+
+/**
+ * Inline plate calculator shown during rest, displaying plates for the next set
+ */
+interface NextSetPlatesProps {
+  weight: number;
+  barWeight?: number;
+  nextSetNumber: number;
+  targetReps: number;
+  percentageOfMax?: number | null;
+}
+
+export function NextSetPlates({
+  weight,
+  barWeight = 45,
+  nextSetNumber,
+  targetReps,
+  percentageOfMax,
+}: NextSetPlatesProps) {
+  const { effectiveTheme, settings } = useSettings();
+  const isDark = effectiveTheme === 'dark';
+  const [calculation, setCalculation] = useState<PlateCalculation | null>(null);
+
+  useEffect(() => {
+    plateInventoryService.calculatePlatesForWeight(weight, barWeight).then(setCalculation);
+  }, [weight, barWeight]);
+
+  if (!calculation) return null;
+
+  return (
+    <View className={`p-4 rounded-xl ${isDark ? 'bg-zinc-800/50' : 'bg-zinc-100'}`}>
+      <View className="flex-row items-center justify-between mb-3">
+        <Text className={`text-sm font-medium ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+          Next: Set {nextSetNumber}
+        </Text>
+        <View className="flex-row items-center gap-2">
+          <Text className={`text-lg font-bold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+            {formatWeight(weight, settings.units)}
+          </Text>
+          {percentageOfMax && (
+            <Text className={`text-sm ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+              ({percentageOfMax}%)
+            </Text>
+          )}
+          <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+            x {targetReps}
+          </Text>
+        </View>
+      </View>
+
+      <PlateVisualization plates={calculation.platesPerSide} barWeight={barWeight} />
+
+      {!calculation.isExact && (
+        <View className="flex-row items-center mt-2 p-2 rounded-lg bg-yellow-500/20">
+          <AlertCircle size={14} color="#eab308" />
+          <Text className="ml-2 text-xs text-yellow-500">
+            Actual: {formatWeight(calculation.achievableWeight, settings.units)}
+          </Text>
+        </View>
+      )}
+    </View>
   );
 }
 

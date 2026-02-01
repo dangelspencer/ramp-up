@@ -11,8 +11,8 @@ import { ConfirmModal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { SetRow } from '@/components/workout/SetRow';
 import { LogSetModal } from '@/components/workout/LogSetModal';
-import { PlateCalculatorModal } from '@/components/workout/PlateCalculator';
-import { RestTimer } from '@/components/workout/RestTimer';
+import { PlateCalculatorModal, NextSetPlates } from '@/components/workout/PlateCalculator';
+import { InlineRestTimer } from '@/components/workout/RestTimer';
 import { formatDuration } from '@/utils/formatting';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -244,16 +244,39 @@ export default function WorkoutScreen() {
       </View>
 
       <ScrollView className="flex-1 px-4">
-        {/* Rest Timer */}
+        {/* Rest Timer - compact inline version with plate calculator for next set */}
         {state.restTimer.isRunning && remainingSeconds > 0 && (
-          <View className="mt-4">
-            <RestTimer
+          <View className="mt-4 gap-3">
+            {/* Compact progress bar timer */}
+            <InlineRestTimer
               remainingSeconds={remainingSeconds}
               totalSeconds={state.restTimer.totalSeconds}
               isRunning={state.restTimer.isRunning}
               onSkip={skipRestTimer}
-              size="lg"
             />
+
+            {/* Plate calculator for the next set */}
+            {(() => {
+              // Find the next uncompleted set
+              const nextSetIndex = currentExercise?.sets.findIndex((s) => !s.completed);
+              const nextSet = nextSetIndex !== undefined && nextSetIndex >= 0
+                ? currentExercise?.sets[nextSetIndex]
+                : null;
+
+              // Don't show plate calc for bodyweight exercises
+              if (!nextSet || (nextSet.targetWeight === 0 && nextSet.percentageOfMax === null)) {
+                return null;
+              }
+
+              return (
+                <NextSetPlates
+                  weight={nextSet.targetWeight}
+                  nextSetNumber={nextSetIndex + 1}
+                  targetReps={nextSet.targetReps}
+                  percentageOfMax={nextSet.percentageOfMax}
+                />
+              );
+            })()}
           </View>
         )}
 

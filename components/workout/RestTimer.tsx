@@ -200,3 +200,95 @@ export function CompactRestTimer({
     </TouchableOpacity>
   );
 }
+
+/**
+ * Inline rest timer with linear progress bar
+ * Layout: [########------] MM:SS [SKIP]
+ */
+interface InlineRestTimerProps {
+  remainingSeconds: number;
+  totalSeconds: number;
+  isRunning: boolean;
+  onSkip: () => void;
+  onComplete?: () => void;
+}
+
+export function InlineRestTimer({
+  remainingSeconds,
+  totalSeconds,
+  isRunning,
+  onSkip,
+  onComplete,
+}: InlineRestTimerProps) {
+  const { effectiveTheme } = useSettings();
+  const isDark = effectiveTheme === 'dark';
+  const previousSecondsRef = useRef(remainingSeconds);
+
+  // Handle timer countdown effects
+  useEffect(() => {
+    // Timer complete
+    if (remainingSeconds === 0 && previousSecondsRef.current > 0 && isRunning) {
+      haptics.timerComplete();
+      audio.playTimerComplete();
+      onComplete?.();
+    }
+    // Countdown ticks for last 3 seconds
+    else if (remainingSeconds > 0 && remainingSeconds <= 3 && isRunning && remainingSeconds !== previousSecondsRef.current) {
+      haptics.timerTick();
+      audio.playTick();
+    }
+    previousSecondsRef.current = remainingSeconds;
+  }, [remainingSeconds, isRunning, onComplete]);
+
+  // Progress starts at 100% (full) and drains to 0% as time passes
+  const progress = totalSeconds > 0 ? (remainingSeconds / totalSeconds) * 100 : 0;
+
+  // Hide timer when it reaches 0
+  if (remainingSeconds === 0) {
+    return null;
+  }
+
+  // Get color based on remaining time
+  const getProgressColor = () => {
+    if (remainingSeconds <= 10) return isDark ? '#ef4444' : '#dc2626'; // red
+    if (remainingSeconds <= 30) return isDark ? '#f59e0b' : '#d97706'; // amber
+    return '#f97316'; // orange
+  };
+
+  return (
+    <View
+      className={`flex-row items-center gap-3 px-4 py-3 rounded-xl ${
+        isDark ? 'bg-zinc-800' : 'bg-zinc-100'
+      }`}
+    >
+      {/* Progress bar - takes up most of the space */}
+      <View className="flex-1 flex-row items-center gap-3">
+        <View className={`flex-1 h-3 rounded-full overflow-hidden ${isDark ? 'bg-zinc-700' : 'bg-zinc-300'}`}>
+          <View
+            className="h-full rounded-full"
+            style={{ 
+              width: `${progress}%`,
+              backgroundColor: getProgressColor(),
+            }}
+          />
+        </View>
+
+        {/* Time display */}
+        <Text className={`text-base font-bold tabular-nums min-w-[52px] ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+          {formatRestTime(remainingSeconds)}
+        </Text>
+      </View>
+
+      {/* Skip button */}
+      <TouchableOpacity
+        onPress={() => {
+          haptics.medium();
+          onSkip();
+        }}
+        className="bg-orange-500 px-4 py-2 rounded-lg"
+      >
+        <Text className="text-white font-semibold text-sm">SKIP</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
