@@ -1,7 +1,7 @@
-import { eq } from 'drizzle-orm';
+import { eq, gte, lte, and, desc } from 'drizzle-orm';
 
 import { db } from '@/db/client';
-import { goals, Goal } from '@/db/schema';
+import { goals, Goal, workouts } from '@/db/schema';
 import { workoutService } from './workout.service';
 import { notificationService } from './notification.service';
 import { settingsService } from './settings.service';
@@ -111,6 +111,78 @@ export const goalService = {
   },
 
   /**
+   * Calculate streak by counting consecutive weeks (from goal start) where
+   * workout target was met. Goes backwards from the most recent completed week.
+   */
+  async calculateStreakFromHistory(goal: Goal): Promise<number> {
+    const goalStartDate = new Date(goal.startDate);
+    const now = new Date();
+
+    // Get start of current week (Sunday)
+    const currentWeekStart = new Date(now);
+    currentWeekStart.setDate(now.getDate() - now.getDay());
+    currentWeekStart.setHours(0, 0, 0, 0);
+
+    // Get start of goal week (Sunday of the week containing goal start)
+    const goalWeekStart = new Date(goalStartDate);
+    goalWeekStart.setDate(goalStartDate.getDate() - goalStartDate.getDay());
+    goalWeekStart.setHours(0, 0, 0, 0);
+
+    // Calculate how many full weeks have passed since goal started
+    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+    const weeksSinceGoalStart = Math.floor(
+      (currentWeekStart.getTime() - goalWeekStart.getTime()) / msPerWeek
+    );
+
+    // Get all completed workouts since goal started
+    const completedWorkouts = await db
+      .select()
+      .from(workouts)
+      .where(
+        and(
+          gte(workouts.completedAt, goalWeekStart.toISOString()),
+          lte(workouts.completedAt, now.toISOString())
+        )
+      )
+      .orderBy(desc(workouts.completedAt));
+
+    // Group workouts by week number (0 = goal start week)
+    const workoutsByWeek = new Map<number, number>();
+    for (const workout of completedWorkouts) {
+      if (!workout.completedAt) continue;
+      const workoutDate = new Date(workout.completedAt);
+      const weekNumber = Math.floor(
+        (workoutDate.getTime() - goalWeekStart.getTime()) / msPerWeek
+      );
+      workoutsByWeek.set(weekNumber, (workoutsByWeek.get(weekNumber) ?? 0) + 1);
+    }
+
+    // Count streak going backwards from most recent COMPLETED week
+    // Don't count the current week unless it's fully passed or goal already met
+    const workoutsThisWeek = workoutsByWeek.get(weeksSinceGoalStart) ?? 0;
+    const currentWeekMetGoal = workoutsThisWeek >= goal.workoutsPerWeek;
+
+    // Determine starting point for streak calculation
+    // If current week met goal, include it; otherwise start from previous week
+    let streak = 0;
+    const startWeek = currentWeekMetGoal
+      ? weeksSinceGoalStart
+      : weeksSinceGoalStart - 1;
+
+    for (let week = startWeek; week >= 0; week--) {
+      const workoutsInWeek = workoutsByWeek.get(week) ?? 0;
+      if (workoutsInWeek >= goal.workoutsPerWeek) {
+        streak++;
+      } else {
+        // Streak broken
+        break;
+      }
+    }
+
+    return streak;
+  },
+
+  /**
    * Get goal progress for the current week
    */
   async getProgress(): Promise<GoalProgress | null> {
@@ -154,10 +226,13 @@ export const goalService = {
     ).length;
     const isOnTrack = workoutsThisWeek.length >= scheduledDaysPassed;
 
+    // Calculate streak from workout history instead of using stored value
+    const streakWeeks = await this.calculateStreakFromHistory(goal);
+
     return {
       workoutsThisWeek: workoutsThisWeek.length,
       workoutsTarget: goal.workoutsPerWeek,
-      streakWeeks: goal.currentStreak ?? 0,
+      streakWeeks,
       isOnTrack,
       scheduledDays,
       completedDays,
