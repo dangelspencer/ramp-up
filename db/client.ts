@@ -188,4 +188,33 @@ export async function createTables(): Promise<void> {
       count INTEGER NOT NULL DEFAULT 0
     );
   `);
+
+  // Run migrations for schema changes
+  runMigrations();
+}
+
+/**
+ * Run schema migrations for existing databases
+ */
+function runMigrations(): void {
+  // Migration: Add progression_interval and successful_workouts to exercises table
+  try {
+    // Check if column exists by querying table info
+    const tableInfo = expoDb.getAllSync('PRAGMA table_info(exercises)') as Array<{ name: string }>;
+    const columnNames = tableInfo.map((col) => col.name);
+
+    if (!columnNames.includes('progression_interval')) {
+      expoDb.execSync(`
+        ALTER TABLE exercises ADD COLUMN progression_interval INTEGER NOT NULL DEFAULT 1;
+      `);
+    }
+
+    if (!columnNames.includes('successful_workouts')) {
+      expoDb.execSync(`
+        ALTER TABLE exercises ADD COLUMN successful_workouts INTEGER NOT NULL DEFAULT 0;
+      `);
+    }
+  } catch (error) {
+    console.error('Migration error:', error);
+  }
 }
