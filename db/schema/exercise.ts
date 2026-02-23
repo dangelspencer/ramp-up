@@ -16,6 +16,7 @@ export const exercises = sqliteTable('exercises', {
   successfulWorkouts: integer('successful_workouts').notNull().default(0), // count of successful workouts since last progression
   barbellId: text('barbell_id').references(() => barbells.id),
   defaultRestTime: integer('default_rest_time').default(90), // seconds
+  goalWeight: real('goal_weight'), // in lbs, nullable
   createdAt: text('created_at')
     .default(sql`(datetime('now'))`)
     .notNull(),

@@ -214,6 +214,12 @@ function runMigrations(): void {
         ALTER TABLE exercises ADD COLUMN successful_workouts INTEGER NOT NULL DEFAULT 0;
       `);
     }
+
+    if (!columnNames.includes('goal_weight')) {
+      expoDb.execSync(`
+        ALTER TABLE exercises ADD COLUMN goal_weight REAL;
+      `);
+    }
   } catch (error) {
     console.error('Migration error:', error);
   }
