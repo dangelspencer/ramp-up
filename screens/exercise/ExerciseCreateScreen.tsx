@@ -32,6 +32,7 @@ export default function ExerciseCreateScreen() {
   const [autoProgression, setAutoProgression] = useState(true);
   const [barbellId, setBarbellId] = useState<string>('');
   const [defaultRestTime, setDefaultRestTime] = useState<number | null>(90);
+  const [goalWeight, setGoalWeight] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<{ name?: string; maxWeight?: string }>({});
 
@@ -69,6 +70,11 @@ export default function ExerciseCreateScreen() {
         incrementInLbs = incrementInLbs * 2.20462;
       }
 
+      let goalWeightInLbs: number | null = null;
+      if (goalWeight !== null && goalWeight > 0) {
+        goalWeightInLbs = units === 'metric' ? goalWeight * 2.20462 : goalWeight;
+      }
+
       await createExercise({
         name: name.trim(),
         maxWeight: weightInLbs,
@@ -76,6 +82,7 @@ export default function ExerciseCreateScreen() {
         autoProgression,
         barbellId: barbellId || null,
         defaultRestTime: defaultRestTime ?? 90,
+        goalWeight: goalWeightInLbs,
       });
 
       navigation.goBack();
@@ -188,6 +195,20 @@ export default function ExerciseCreateScreen() {
               placeholder="90"
               suffix="sec"
               hint="Rest time between sets (in seconds)"
+            />
+          </View>
+
+          {/* Weight Goal */}
+          <View className="mb-6">
+            <NumberInput
+              label={`Weight Goal (${unitLabel})`}
+              value={goalWeight}
+              onChangeValue={setGoalWeight}
+              min={0}
+              allowDecimals
+              placeholder="200"
+              suffix={unitLabel}
+              hint="Optional target weight to track progress toward"
             />
           </View>
 

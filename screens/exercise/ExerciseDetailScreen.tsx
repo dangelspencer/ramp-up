@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ChevronLeft, Pencil, Trash2, X, TrendingUp, Clock, Dumbbell } from 'lucide-react-native';
+import { ChevronLeft, Pencil, Trash2, X, TrendingUp, Clock, Dumbbell, Target, Check } from 'lucide-react-native';
 
 import { useSettings, useExercises, useBarbells } from '@/hooks';
 import { Button } from '@/components/ui/Button';
@@ -12,6 +12,7 @@ import { Input, NumberInput } from '@/components/ui/Input';
 import { Select, SegmentedControl } from '@/components/ui/Select';
 import { Switch } from '@/components/ui/Switch';
 import { ConfirmModal } from '@/components/ui/Modal';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import { formatWeight } from '@/utils/formatting';
 import { exerciseService, ExerciseWithBarbell } from '@/services/exercise.service';
 import { RootStackParamList } from '../../App';
@@ -47,6 +48,7 @@ export default function ExerciseDetailScreen() {
   const [editProgressionInterval, setEditProgressionInterval] = useState<number>(1);
   const [editBarbellId, setEditBarbellId] = useState<string>('');
   const [editDefaultRestTime, setEditDefaultRestTime] = useState<number | null>(90);
+  const [editGoalWeight, setEditGoalWeight] = useState<number | null>(null);
 
   const loadExercise = async () => {
     try {
@@ -76,6 +78,13 @@ export default function ExerciseDetailScreen() {
     setEditProgressionInterval(data.progressionInterval ?? 1);
     setEditBarbellId(data.barbellId ?? '');
     setEditDefaultRestTime(data.defaultRestTime ?? 90);
+
+    if (data.goalWeight !== null && data.goalWeight !== undefined && data.goalWeight > 0) {
+      const goalInUserUnits = units === 'metric' ? data.goalWeight / 2.20462 : data.goalWeight;
+      setEditGoalWeight(Math.round(goalInUserUnits * 10) / 10);
+    } else {
+      setEditGoalWeight(null);
+    }
   };
 
   useEffect(() => {
@@ -120,6 +129,11 @@ export default function ExerciseDetailScreen() {
         incrementInLbs = incrementInLbs * 2.20462;
       }
 
+      let goalWeightInLbs: number | null = null;
+      if (editGoalWeight !== null && editGoalWeight > 0) {
+        goalWeightInLbs = units === 'metric' ? editGoalWeight * 2.20462 : editGoalWeight;
+      }
+
       await updateExercise(id, {
         name: editName.trim(),
         maxWeight: weightInLbs,
@@ -128,6 +142,7 @@ export default function ExerciseDetailScreen() {
         progressionInterval: editProgressionInterval,
         barbellId: editBarbellId || null,
         defaultRestTime: editDefaultRestTime ?? 90,
+        goalWeight: goalWeightInLbs,
       });
 
       await loadExercise();
@@ -334,6 +349,32 @@ export default function ExerciseDetailScreen() {
                 />
               </Card>
 
+              {/* Weight Goal Card */}
+              <Card variant="elevated" className="mb-4">
+                <View className="flex-row items-center gap-2 mb-4">
+                  <View className={`p-2 rounded-lg ${isDark ? 'bg-emerald-500/20' : 'bg-emerald-100'}`}>
+                    <Target size={20} color="#10b981" />
+                  </View>
+                  <View>
+                    <Text className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                      Weight Goal
+                    </Text>
+                    <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                      Target weight to track progress toward
+                    </Text>
+                  </View>
+                </View>
+                <NumberInput
+                  value={editGoalWeight}
+                  onChangeValue={setEditGoalWeight}
+                  min={0}
+                  allowDecimals
+                  placeholder="200"
+                  suffix={unitLabel}
+                  hint="Leave empty to remove goal"
+                />
+              </Card>
+
               {/* Auto Progression Card - only show for barbell exercises */}
               {editBarbellId !== '' && (
                 <Card variant="elevated" className="mb-4">
@@ -421,6 +462,40 @@ export default function ExerciseDetailScreen() {
                   </View>
                 </Card>
               </View>
+
+              {/* Weight Goal Progress */}
+              {exercise.goalWeight !== null && exercise.goalWeight !== undefined && exercise.goalWeight > 0 && (() => {
+                const displayGoalWeight = units === 'metric' ? exercise.goalWeight! / 2.20462 : exercise.goalWeight!;
+                const progressPercent = Math.min(100, (exercise.maxWeight / exercise.goalWeight!) * 100);
+                const achieved = exercise.maxWeight >= exercise.goalWeight!;
+                return (
+                  <Card className="mb-4">
+                    <View className="flex-row items-center mb-3">
+                      <View className={`p-2 rounded-lg mr-3 ${isDark ? 'bg-emerald-500/20' : 'bg-emerald-100'}`}>
+                        <Target size={20} color="#10b981" />
+                      </View>
+                      <View className="flex-1">
+                        <Text className={`font-medium ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+                          Weight Goal
+                        </Text>
+                        <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                          {formatWeight(displayMaxWeight, settings.units)} → {formatWeight(displayGoalWeight, settings.units)}
+                        </Text>
+                      </View>
+                      {achieved && (
+                        <View className="bg-green-500/20 px-3 py-1 rounded-full">
+                          <Text className="text-green-500 text-sm font-medium">Achieved!</Text>
+                        </View>
+                      )}
+                    </View>
+                    <ProgressBar
+                      progress={progressPercent}
+                      color={achieved ? 'success' : 'primary'}
+                      height={6}
+                    />
+                  </Card>
+                );
+              })()}
 
               {/* Rest Time */}
               <Card className="mb-4">
