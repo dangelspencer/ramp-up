@@ -244,41 +244,40 @@ export default function WorkoutScreen() {
       </View>
 
       <ScrollView className="flex-1 px-4">
-        {/* Rest Timer - compact inline version with plate calculator for next set */}
+        {/* Rest Timer */}
         {state.restTimer.isRunning && remainingSeconds > 0 && (
-          <View className="mt-4 gap-3">
-            {/* Compact progress bar timer */}
+          <View className="mt-4">
             <InlineRestTimer
               remainingSeconds={remainingSeconds}
               totalSeconds={state.restTimer.totalSeconds}
               isRunning={state.restTimer.isRunning}
               onSkip={skipRestTimer}
             />
-
-            {/* Plate calculator for the next set */}
-            {(() => {
-              // Find the next uncompleted set
-              const nextSetIndex = currentExercise?.sets.findIndex((s) => !s.completed);
-              const nextSet = nextSetIndex !== undefined && nextSetIndex >= 0
-                ? currentExercise?.sets[nextSetIndex]
-                : null;
-
-              // Don't show plate calc for bodyweight exercises
-              if (!nextSet || (nextSet.targetWeight === 0 && nextSet.percentageOfMax === null)) {
-                return null;
-              }
-
-              return (
-                <NextSetPlates
-                  weight={nextSet.targetWeight}
-                  nextSetNumber={nextSetIndex + 1}
-                  targetReps={nextSet.targetReps}
-                  percentageOfMax={nextSet.percentageOfMax}
-                />
-              );
-            })()}
           </View>
         )}
+
+        {/* Plate calculator for the current/next set - always visible */}
+        {(() => {
+          const nextSetIndex = currentExercise?.sets.findIndex((s) => !s.completed);
+          const nextSet = nextSetIndex !== undefined && nextSetIndex >= 0
+            ? currentExercise?.sets[nextSetIndex]
+            : null;
+
+          if (!nextSet || (nextSet.targetWeight === 0 && nextSet.percentageOfMax === null)) {
+            return null;
+          }
+
+          return (
+            <View className="mt-3">
+              <NextSetPlates
+                weight={nextSet.targetWeight}
+                nextSetNumber={nextSetIndex + 1}
+                targetReps={nextSet.targetReps}
+                percentageOfMax={nextSet.percentageOfMax}
+              />
+            </View>
+          );
+        })()}
 
         {/* Exercise Navigation */}
         <View className="flex-row items-center justify-between mt-4">
