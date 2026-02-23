@@ -3,8 +3,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useState, useCallback, useEffect } from 'react';
-import { useSettings, usePrograms, useGoals, useBodyComposition } from '@/hooks';
-import { ProgramCard, NoProgramCard, GoalCard, NoGoalCard, BodyCompositionCard } from '@/components/home';
+import { useSettings, usePrograms, useGoals, useBodyComposition, useExercises } from '@/hooks';
+import { ProgramCard, NoProgramCard, GoalCard, NoGoalCard, BodyCompositionCard, WeightGoalsCard } from '@/components/home';
 import { routineService, RoutineWithDetails } from '@/services/routine.service';
 import { RootStackParamList } from '../../App';
 
@@ -18,6 +18,7 @@ export default function HomeScreen() {
   const { activeProgram, getNextRoutine, refresh: refreshPrograms, isLoading: programsLoading } = usePrograms();
   const { progress, refresh: refreshGoals, isLoading: goalsLoading } = useGoals();
   const { latest, entries, refresh: refreshBody, isLoading: bodyLoading } = useBodyComposition();
+  const { exercisesWithGoals, refresh: refreshExercises } = useExercises();
 
   const [nextRoutine, setNextRoutine] = useState<RoutineWithDetails | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -28,7 +29,8 @@ export default function HomeScreen() {
       refreshPrograms();
       refreshGoals();
       refreshBody();
-    }, [refreshPrograms, refreshGoals, refreshBody])
+      refreshExercises();
+    }, [refreshPrograms, refreshGoals, refreshBody, refreshExercises])
   );
 
   // Load next routine when activeProgram changes
@@ -51,9 +53,9 @@ export default function HomeScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([refreshPrograms(), refreshGoals(), refreshBody()]);
+    await Promise.all([refreshPrograms(), refreshGoals(), refreshBody(), refreshExercises()]);
     setRefreshing(false);
-  }, [refreshPrograms, refreshGoals, refreshBody]);
+  }, [refreshPrograms, refreshGoals, refreshBody, refreshExercises]);
 
   const handleStartWorkout = () => {
     if (nextRoutine) {
@@ -92,6 +94,10 @@ export default function HomeScreen() {
 
   const handleAddBodyComp = () => {
     navigation.navigate('BodyCompLog');
+  };
+
+  const handleExercisePress = (id: string) => {
+    navigation.navigate('ExerciseDetail', { id });
   };
 
   const _isLoading = programsLoading || goalsLoading || bodyLoading;
@@ -139,6 +145,14 @@ export default function HomeScreen() {
           <GoalCard progress={progress} onPress={handleViewGoal} />
         ) : (
           <NoGoalCard onSetGoal={handleSetGoal} />
+        )}
+
+        {/* Weight Goals Card */}
+        {exercisesWithGoals.length > 0 && (
+          <WeightGoalsCard
+            exercises={exercisesWithGoals}
+            onExercisePress={handleExercisePress}
+          />
         )}
 
         {/* Body Composition Card */}
