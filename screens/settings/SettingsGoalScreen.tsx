@@ -14,6 +14,7 @@ import {
   Bell,
 } from 'lucide-react-native';
 import { useSettings, useGoals } from '@/hooks';
+import { notificationService } from '@/services/notification.service';
 import { Card, Button, Switch } from '@/components/ui';
 import { NumberInput } from '@/components/ui/Input';
 import { CircularProgress } from '@/components/ui/ProgressBar';
@@ -148,6 +149,9 @@ export default function SettingsGoalScreen() {
         );
       }
 
+      // Sync notifications with the new goal schedule
+      await notificationService.syncAllNotifications(scheduledDays);
+
       navigation.goBack();
     } catch (error) {
       console.error('Failed to save goal:', error);
@@ -167,6 +171,9 @@ export default function SettingsGoalScreen() {
     if (activeGoal) {
       await deleteGoal(activeGoal.id);
     }
+    // Cancel goal notifications and re-sync (workout reminders fall back to every day)
+    await notificationService.cancelGoalNotifications();
+    await notificationService.syncAllNotifications(undefined);
     setDeleteModalVisible(false);
     navigation.goBack();
   };
