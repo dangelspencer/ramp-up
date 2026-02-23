@@ -365,6 +365,53 @@ export const notificationService = {
   },
 
   /**
+   * Sync all scheduled notifications with current settings.
+   * Call on app startup and whenever notification-related settings change.
+   */
+  async syncAllNotifications(goalScheduledDays?: number[]): Promise<void> {
+    const settings = await settingsService.getAll();
+
+    if (!settings.notificationsEnabled) {
+      await this.cancelAllNotifications();
+      return;
+    }
+
+    // Workout reminders
+    if (settings.workoutRemindersEnabled) {
+      const [hourStr, minuteStr] = settings.workoutReminderTime.split(':');
+      const days = goalScheduledDays ?? [0, 1, 2, 3, 4, 5, 6];
+      await this.scheduleWorkoutReminders({
+        days,
+        hour: parseInt(hourStr, 10),
+        minute: parseInt(minuteStr, 10),
+      });
+    } else {
+      await this.cancelWorkoutReminders();
+    }
+
+    // Measurement reminders
+    if (settings.measurementRemindersEnabled) {
+      const [hourStr, minuteStr] = settings.measurementReminderTime.split(':');
+      const hour = parseInt(hourStr, 10);
+      const minute = parseInt(minuteStr, 10);
+      const dayOfWeek = settings.measurementReminderFrequency === 'weekly' ? 1 : undefined; // Monday default
+      await this.scheduleMeasurementReminder(
+        settings.measurementReminderFrequency === 'daily' ? 'daily' : 'weekly',
+        hour,
+        minute,
+        dayOfWeek,
+      );
+    } else {
+      await this.cancelMeasurementReminders();
+    }
+
+    // Goal notifications
+    if (!settings.goalNotificationsEnabled) {
+      await this.cancelGoalNotifications();
+    }
+  },
+
+  /**
    * Get all scheduled notifications (for debugging)
    */
   async getAllScheduledNotifications(): Promise<Notifications.NotificationRequest[]> {
