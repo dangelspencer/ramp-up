@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { exerciseService } from '@/services/exercise.service';
 import { Exercise } from '@/db/schema';
 
@@ -46,12 +46,18 @@ export function useExercises() {
     return success;
   }, []);
 
+  const exercisesWithGoals = useMemo(
+    () => exercises.filter((e) => e.goalWeight !== null && e.goalWeight !== undefined && e.goalWeight > 0),
+    [exercises]
+  );
+
   const searchExercises = useCallback(async (query: string) => {
     return exerciseService.searchByName(query);
   }, []);
 
   return {
     exercises,
+    exercisesWithGoals,
     isLoading,
     error,
     refresh: loadExercises,
