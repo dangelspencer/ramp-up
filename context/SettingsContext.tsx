@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, ReactNode, useCallback } from 'react';
 import { settingsService, AppSettings } from '@/services/settings.service';
+import { notificationService } from '@/services/notification.service';
+import { goalService } from '@/services/goal.service';
 import { useColorScheme } from 'react-native';
 
 interface SettingsContextType {
@@ -32,6 +34,18 @@ const defaultSettings: AppSettings = {
   goalNotificationTime: '19:00',
 };
 
+const NOTIFICATION_SETTING_KEYS: (keyof AppSettings)[] = [
+  'notificationsEnabled',
+  'workoutRemindersEnabled',
+  'workoutReminderTime',
+  'measurementRemindersEnabled',
+  'measurementReminderFrequency',
+  'measurementReminderTime',
+  'goalNotificationsEnabled',
+  'goalNotificationDay',
+  'goalNotificationTime',
+];
+
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 interface SettingsProviderProps {
@@ -58,10 +72,49 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     loadSettings();
   }, [loadSettings]);
 
+  // Sync notifications with OS on startup once settings are loaded
+  const hasInitialSynced = useRef(false);
+  useEffect(() => {
+    if (!isLoading && !hasInitialSynced.current) {
+      hasInitialSynced.current = true;
+      (async () => {
+        try {
+          const goal = await goalService.getActive();
+          let goalDays: number[] | undefined;
+          if (goal?.scheduledDays) {
+            try {
+              goalDays = JSON.parse(goal.scheduledDays);
+            } catch { /* use undefined */ }
+          }
+          await notificationService.syncAllNotifications(goalDays);
+        } catch (error) {
+          console.error('Failed to sync notifications on startup:', error);
+        }
+      })();
+    }
+  }, [isLoading]);
+
   const updateSettings = useCallback(async (updates: Partial<AppSettings>) => {
     try {
       await settingsService.updateMany(updates);
       setSettings((prev) => ({ ...prev, ...updates }));
+
+      // Re-sync notifications if any notification-related setting changed
+      const hasNotificationChange = NOTIFICATION_SETTING_KEYS.some((key) => key in updates);
+      if (hasNotificationChange) {
+        // Request permissions if master toggle is being enabled
+        if (updates.notificationsEnabled === true) {
+          await notificationService.requestPermissions();
+        }
+        const goal = await goalService.getActive();
+        let goalDays: number[] | undefined;
+        if (goal?.scheduledDays) {
+          try {
+            goalDays = JSON.parse(goal.scheduledDays);
+          } catch { /* use undefined */ }
+        }
+        await notificationService.syncAllNotifications(goalDays);
+      }
     } catch (error) {
       console.error('Failed to update settings:', error);
       throw error;
