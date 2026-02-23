@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import { workoutService, WorkoutWithDetails, AutoProgressionResult } from '@/services/workout.service';
 import { notificationService } from '@/services/notification.service';
+import { goalService } from '@/services/goal.service';
 
 interface WorkoutSet {
   id: string;
@@ -406,6 +407,13 @@ export function ActiveWorkoutProvider({ children }: ActiveWorkoutProviderProps) 
     dispatch({ type: 'START_COMPLETING' });
 
     const progressionResults = await workoutService.completeWorkout(state.workoutId);
+
+    // Update goal streak (don't let goal errors break the workout flow)
+    try {
+      await goalService.checkAndUpdateStreak();
+    } catch (error) {
+      console.error('Failed to check/update goal streak:', error);
+    }
 
     dispatch({ type: 'COMPLETE_WORKOUT', payload: { progressionResults } });
 
