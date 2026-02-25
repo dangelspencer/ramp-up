@@ -56,6 +56,7 @@ interface ActiveWorkoutState {
   autoProgressionResults: AutoProgressionResult[];
   isCompleting: boolean;
   startedAt: string | null;
+  reducedWeightPercent: number;
 }
 
 type ActiveWorkoutAction =
@@ -70,7 +71,8 @@ type ActiveWorkoutAction =
   | { type: 'START_COMPLETING' }
   | { type: 'COMPLETE_WORKOUT'; payload: { progressionResults: AutoProgressionResult[] } }
   | { type: 'CANCEL_WORKOUT' }
-  | { type: 'CLEAR_PROGRESSION_RESULTS' };
+  | { type: 'CLEAR_PROGRESSION_RESULTS' }
+  | { type: 'SET_REDUCED_WEIGHT'; payload: { percent: number; exercises: WorkoutExercise[] } };
 
 const initialState: ActiveWorkoutState = {
   isActive: false,
@@ -88,6 +90,7 @@ const initialState: ActiveWorkoutState = {
   autoProgressionResults: [],
   isCompleting: false,
   startedAt: null,
+  reducedWeightPercent: 0,
 };
 
 function activeWorkoutReducer(
@@ -113,6 +116,7 @@ function activeWorkoutReducer(
           })),
         })),
         startedAt: workout.startedAt,
+        reducedWeightPercent: workout.reducedWeightPercent ?? 0,
       };
     }
 
@@ -233,6 +237,13 @@ function activeWorkoutReducer(
         autoProgressionResults: [],
       };
 
+    case 'SET_REDUCED_WEIGHT':
+      return {
+        ...state,
+        reducedWeightPercent: action.payload.percent,
+        exercises: action.payload.exercises,
+      };
+
     default:
       return state;
   }
@@ -266,6 +277,7 @@ interface ActiveWorkoutContextType {
   completeWorkout: () => Promise<AutoProgressionResult[]>;
   cancelWorkout: () => Promise<void>;
   clearProgressionResults: () => void;
+  setReducedWeight: (percent: number) => Promise<void>;
 }
 
 const ActiveWorkoutContext = createContext<ActiveWorkoutContextType | undefined>(undefined);
@@ -431,6 +443,29 @@ export function ActiveWorkoutProvider({ children }: ActiveWorkoutProviderProps) 
     dispatch({ type: 'CANCEL_WORKOUT' });
   }, [state.workoutId]);
 
+  const setReducedWeight = useCallback(async (percent: number) => {
+    if (!state.workoutId) return;
+
+    // Update DB
+    await workoutService.updateReducedWeightPercent(state.workoutId, percent);
+    await workoutService.recalculateTargetWeights(state.workoutId, percent);
+
+    // Reload workout details to get updated target weights
+    const updated = await workoutService.getByIdWithDetails(state.workoutId);
+    if (updated) {
+      const exercises = updated.exercises.map((e) => ({
+        ...e,
+        sets: e.sets.map((s) => ({
+          ...s,
+          actualWeight: s.actualWeight ?? null,
+          actualReps: s.actualReps ?? null,
+          completed: s.completed ?? false,
+        })),
+      }));
+      dispatch({ type: 'SET_REDUCED_WEIGHT', payload: { percent, exercises } });
+    }
+  }, [state.workoutId]);
+
   const clearProgressionResults = useCallback(() => {
     dispatch({ type: 'CLEAR_PROGRESSION_RESULTS' });
   }, []);
@@ -450,6 +485,7 @@ export function ActiveWorkoutProvider({ children }: ActiveWorkoutProviderProps) 
         completeWorkout,
         cancelWorkout,
         clearProgressionResults,
+        setReducedWeight,
       }}
     >
       {children}
