@@ -119,7 +119,8 @@ export async function createTables(): Promise<void> {
       routine_id TEXT REFERENCES routines(id),
       started_at TEXT DEFAULT (datetime('now')) NOT NULL,
       completed_at TEXT,
-      notes TEXT
+      notes TEXT,
+      reduced_weight_percent INTEGER DEFAULT 0
     );
   `);
 
@@ -222,5 +223,19 @@ function runMigrations(): void {
     }
   } catch (error) {
     console.error('Migration error:', error);
+  }
+
+  // Migration: Add reduced_weight_percent to workouts table
+  try {
+    const workoutTableInfo = expoDb.getAllSync('PRAGMA table_info(workouts)') as Array<{ name: string }>;
+    const workoutColumns = workoutTableInfo.map((col) => col.name);
+
+    if (!workoutColumns.includes('reduced_weight_percent')) {
+      expoDb.execSync(`
+        ALTER TABLE workouts ADD COLUMN reduced_weight_percent INTEGER DEFAULT 0;
+      `);
+    }
+  } catch (error) {
+    console.error('Migration error (workouts):', error);
   }
 }

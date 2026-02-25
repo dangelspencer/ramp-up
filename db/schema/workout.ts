@@ -19,6 +19,7 @@ export const workouts = sqliteTable('workouts', {
     .notNull(),
   completedAt: text('completed_at'),
   notes: text('notes'),
+  reducedWeightPercent: integer('reduced_weight_percent').default(0),
 });
 
 export const workoutExercises = sqliteTable('workout_exercises', {
