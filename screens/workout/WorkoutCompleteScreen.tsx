@@ -3,7 +3,7 @@ import { View, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Trophy, TrendingUp, Clock, Dumbbell, Check } from 'lucide-react-native';
+import { Trophy, TrendingUp, Clock, Dumbbell, Check, Thermometer } from 'lucide-react-native';
 
 import { RootStackParamList } from '../../App';
 import { useSettings, useActiveWorkout, useWorkoutHistory } from '@/hooks';
@@ -128,6 +128,22 @@ export default function WorkoutCompleteScreen() {
             </Text>
           </View>
         </Card>
+
+        {/* Reduced Weight Info */}
+        {(latestWorkout?.reducedWeightPercent ?? 0) > 0 && (
+          <Card className="mb-6">
+            <CardHeader
+              title="Reduced Weight Workout"
+              subtitle={`Weights were lowered by ${latestWorkout?.reducedWeightPercent}%`}
+              icon={<Thermometer size={20} color="#f59e0b" />}
+            />
+            <CardContent>
+              <Text className={`${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                Auto-progression was paused for this workout. Your exercise max weights remain unchanged.
+              </Text>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Auto-Progression Results */}
         {progressionResults.length > 0 && (

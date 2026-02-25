@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Calendar, ChevronRight, Dumbbell, Clock, CheckCircle } from 'lucide-react-native';
+import { Calendar, ChevronRight, Dumbbell, Clock, CheckCircle, Thermometer } from 'lucide-react-native';
 import { useSettings, useWorkoutHistory } from '@/hooks';
 import { formatWeight } from '@/utils/formatting';
 import { RootStackParamList } from '../../App';
@@ -202,6 +202,16 @@ export default function HistoryScreen() {
                         >
                           Total volume: {formatWeight(totalVolume, settings.units)}
                         </Text>
+                      )}
+
+                      {/* Reduced Weight Badge */}
+                      {(workout.reducedWeightPercent ?? 0) > 0 && (
+                        <View className="flex-row items-center gap-1 mt-2">
+                          <Thermometer size={14} color="#f59e0b" />
+                          <Text style={{ color: '#f59e0b', fontSize: 13, fontWeight: '500' }}>
+                            Reduced (-{workout.reducedWeightPercent}%)
+                          </Text>
+                        </View>
                       )}
 
                       {/* Exercise Summary */}

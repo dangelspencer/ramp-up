@@ -12,6 +12,7 @@ import {
   CheckCircle,
   XCircle,
   TrendingUp,
+  Thermometer,
 } from 'lucide-react-native';
 
 import { RootStackParamList } from '../../App';
@@ -189,6 +190,19 @@ export default function WorkoutDetailScreen() {
               <Clock size={16} color={isDark ? '#71717a' : '#a1a1aa'} />
               <Text className={`${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
                 {formatTime(workout.startedAt)} - {formatTime(workout.completedAt)} ({formatDuration(workout.startedAt, workout.completedAt)})
+              </Text>
+            </View>
+          )}
+
+          {/* Reduced Weight Banner */}
+          {(workout.reducedWeightPercent ?? 0) > 0 && (
+            <View
+              className="flex-row items-center gap-2 mt-3 py-2 px-3 rounded-lg"
+              style={{ backgroundColor: isDark ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.1)' }}
+            >
+              <Thermometer size={16} color="#f59e0b" />
+              <Text style={{ color: '#f59e0b', fontWeight: '500', fontSize: 13 }}>
+                Reduced weight: -{workout.reducedWeightPercent}% · Auto-progression was paused
               </Text>
             </View>
           )}
