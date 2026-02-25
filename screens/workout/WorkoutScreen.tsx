@@ -3,12 +3,13 @@ import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ChevronLeft, ChevronRight, Check, ArrowRight, Trophy } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Check, ArrowRight, Trophy, Thermometer } from 'lucide-react-native';
 
 import { RootStackParamList } from '../../App';
 import { useSettings, useActiveWorkout } from '@/hooks';
-import { ConfirmModal } from '@/components/ui/Modal';
+import { Modal, ConfirmModal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
+import { Button } from '@/components/ui/Button';
 import { SetRow } from '@/components/workout/SetRow';
 import { LogSetModal } from '@/components/workout/LogSetModal';
 import { PlateCalculatorModal, NextSetPlates } from '@/components/workout/PlateCalculator';
@@ -23,7 +24,7 @@ export default function WorkoutScreen() {
   const route = useRoute<WorkoutRouteProp>();
   const { routineId, programId } = route.params;
 
-  const { effectiveTheme } = useSettings();
+  const { effectiveTheme, settings } = useSettings();
   const isDark = effectiveTheme === 'dark';
 
   const {
@@ -35,6 +36,7 @@ export default function WorkoutScreen() {
     setCurrentExercise,
     completeWorkout,
     cancelWorkout,
+    setReducedWeight,
   } = useActiveWorkout();
 
   const { showToast } = useToast();
@@ -50,6 +52,9 @@ export default function WorkoutScreen() {
     visible: boolean;
     weight: number | null;
   }>({ visible: false, weight: null });
+  const [showReducedWeightModal, setShowReducedWeightModal] = useState(false);
+  const [selectedReducedPercent, setSelectedReducedPercent] = useState(0);
+  const [isApplyingReduction, setIsApplyingReduction] = useState(false);
 
   // Start the workout when screen loads
   useEffect(() => {
@@ -80,6 +85,27 @@ export default function WorkoutScreen() {
 
     return () => clearInterval(interval);
   }, [state.startedAt, state.isActive]);
+
+  const handleOpenReducedWeightModal = useCallback(() => {
+    setSelectedReducedPercent(
+      state.reducedWeightPercent > 0
+        ? state.reducedWeightPercent
+        : settings.defaultReducedWeightPercent
+    );
+    setShowReducedWeightModal(true);
+  }, [state.reducedWeightPercent, settings.defaultReducedWeightPercent]);
+
+  const handleApplyReducedWeight = useCallback(async () => {
+    setIsApplyingReduction(true);
+    try {
+      await setReducedWeight(selectedReducedPercent);
+    } catch (_error) {
+      Alert.alert('Error', 'Failed to apply reduced weight');
+    } finally {
+      setIsApplyingReduction(false);
+      setShowReducedWeightModal(false);
+    }
+  }, [selectedReducedPercent, setReducedWeight]);
 
   const handleOpenLogModal = useCallback((setIndex: number) => {
     setLogModalState({ visible: true, setIndex });
@@ -209,12 +235,20 @@ export default function WorkoutScreen() {
       {/* Header */}
       <View className={`px-4 py-3 border-b ${isDark ? 'border-zinc-800' : 'border-zinc-200'}`}>
         <View className="flex-row items-center justify-between">
-          <TouchableOpacity
-            onPress={() => setShowCancelModal(true)}
-            className={`p-2 rounded-lg shrink-0 ${isDark ? 'bg-zinc-800' : 'bg-white'}`}
-          >
-            <ChevronLeft size={24} color={isDark ? '#ffffff' : '#18181b'} />
-          </TouchableOpacity>
+          <View className="flex-row items-center gap-2 shrink-0">
+            <TouchableOpacity
+              onPress={() => setShowCancelModal(true)}
+              className={`p-2 rounded-lg ${isDark ? 'bg-zinc-800' : 'bg-white'}`}
+            >
+              <ChevronLeft size={24} color={isDark ? '#ffffff' : '#18181b'} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleOpenReducedWeightModal}
+              className={`p-2 rounded-lg ${isDark ? 'bg-zinc-800' : 'bg-white'}`}
+            >
+              <Thermometer size={24} color={state.reducedWeightPercent > 0 ? '#f59e0b' : (isDark ? '#a1a1aa' : '#71717a')} />
+            </TouchableOpacity>
+          </View>
           <View className="items-center flex-1 mx-2">
             <Text numberOfLines={1} className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
               {state.routineName}
@@ -241,6 +275,20 @@ export default function WorkoutScreen() {
         <Text className={`text-xs mt-1 text-center ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
           {completedSets} / {totalSets} sets completed
         </Text>
+
+        {/* Reduced Weight Banner */}
+        {state.reducedWeightPercent > 0 && (
+          <TouchableOpacity
+            onPress={handleOpenReducedWeightModal}
+            className="mt-2 flex-row items-center justify-center gap-2 py-2 px-3 rounded-lg"
+            style={{ backgroundColor: isDark ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.1)' }}
+          >
+            <Thermometer size={16} color="#f59e0b" />
+            <Text style={{ color: '#f59e0b', fontWeight: '500', fontSize: 13 }}>
+              Reduced weight: -{state.reducedWeightPercent}% · Auto-progression paused
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <ScrollView className="flex-1 px-4">
@@ -346,6 +394,59 @@ export default function WorkoutScreen() {
           isBodyweight={setBeingLogged.targetWeight === 0 && setBeingLogged.percentageOfMax === null}
         />
       )}
+
+      {/* Reduced Weight Modal */}
+      <Modal
+        visible={showReducedWeightModal}
+        onClose={() => setShowReducedWeightModal(false)}
+        title="Reduced Weight"
+        position="bottom"
+      >
+        <Text className={`mb-4 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+          Lower all target weights when you're not feeling 100%. Auto-progression will be paused for this workout.
+        </Text>
+
+        <View className="flex-row flex-wrap gap-2 mb-4">
+          {[0, 5, 10, 15, 20, 25, 30].map((pct) => {
+            const isSelected = selectedReducedPercent === pct;
+            return (
+              <TouchableOpacity
+                key={pct}
+                onPress={() => setSelectedReducedPercent(pct)}
+                style={{
+                  paddingVertical: 10,
+                  paddingHorizontal: 16,
+                  borderRadius: 8,
+                  backgroundColor: isSelected
+                    ? pct === 0
+                      ? isDark ? '#3f3f46' : '#e4e4e7'
+                      : '#f59e0b'
+                    : isDark ? '#27272a' : '#f4f4f5',
+                }}
+              >
+                <Text
+                  style={{
+                    fontWeight: '600',
+                    color: isSelected && pct > 0
+                      ? '#ffffff'
+                      : isDark ? '#e4e4e7' : '#3f3f46',
+                  }}
+                >
+                  {pct === 0 ? 'Off' : `-${pct}%`}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <Button
+          onPress={handleApplyReducedWeight}
+          fullWidth
+          disabled={isApplyingReduction}
+        >
+          {isApplyingReduction ? 'Applying...' : selectedReducedPercent === 0 ? 'Restore Full Weight' : `Apply -${selectedReducedPercent}% Reduction`}
+        </Button>
+      </Modal>
 
       {/* Cancel Workout Modal */}
       <ConfirmModal
