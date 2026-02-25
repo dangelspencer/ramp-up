@@ -25,6 +25,7 @@ export const settings = sqliteTable('settings', {
 // - goalNotificationsEnabled: "true" | "false"
 // - goalNotificationDay: "0" - "6" (Sunday-Saturday)
 // - goalNotificationTime: "19:00"
+// - defaultReducedWeightPercent: "10" (5-30)
 
 export type Setting = typeof settings.$inferSelect;
 export type NewSetting = typeof settings.$inferInsert;
@@ -49,7 +50,8 @@ export type SettingKey =
   | 'onboardingCompleted'
   | 'goalNotificationsEnabled'
   | 'goalNotificationDay'
-  | 'goalNotificationTime';
+  | 'goalNotificationTime'
+  | 'defaultReducedWeightPercent';
 
 export const defaultSettings: Record<SettingKey, string> = {
   theme: 'system',
@@ -71,4 +73,5 @@ export const defaultSettings: Record<SettingKey, string> = {
   goalNotificationsEnabled: 'true',
   goalNotificationDay: '0', // Sunday
   goalNotificationTime: '19:00', // 7 PM
+  defaultReducedWeightPercent: '10',
 };

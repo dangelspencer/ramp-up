@@ -32,6 +32,7 @@ const defaultSettings: AppSettings = {
   goalNotificationsEnabled: true,
   goalNotificationDay: 0,
   goalNotificationTime: '19:00',
+  defaultReducedWeightPercent: 10,
 };
 
 const NOTIFICATION_SETTING_KEYS: (keyof AppSettings)[] = [

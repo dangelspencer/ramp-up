@@ -28,6 +28,7 @@ export interface AppSettings {
   goalNotificationsEnabled: boolean;
   goalNotificationDay: number;
   goalNotificationTime: string;
+  defaultReducedWeightPercent: number;
 }
 
 function parseBoolean(value: string): boolean {
@@ -96,6 +97,7 @@ export const settingsService = {
       goalNotificationsEnabled: parseBoolean(getValue('goalNotificationsEnabled')),
       goalNotificationDay: parseNumber(getValue('goalNotificationDay')),
       goalNotificationTime: getValue('goalNotificationTime'),
+      defaultReducedWeightPercent: parseNumber(getValue('defaultReducedWeightPercent')),
     };
   },
 
