@@ -15,6 +15,7 @@ import {
   User,
   Trash2,
   Clock,
+  Thermometer,
 } from 'lucide-react-native';
 import { useSettings, useBarbells, useGoals } from '@/hooks';
 import { Card, Switch } from '@/components/ui';
@@ -197,6 +198,47 @@ export default function SettingsScreen() {
             ]}
             isDark={isDark}
           />
+        </Card>
+
+        {/* Reduced Weight Default */}
+        <Card variant="elevated" className="mb-4">
+          <View className="flex-row items-center gap-2 mb-1">
+            <Thermometer size={18} color={isDark ? '#a1a1aa' : '#71717a'} />
+            <Text className={`text-sm font-medium ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+              Reduced Weight Default
+            </Text>
+          </View>
+          <Text className={`text-xs mb-3 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+            Pre-selected percentage when activating reduced weight mode
+          </Text>
+          <View className="flex-row flex-wrap gap-2">
+            {[5, 10, 15, 20, 25, 30].map((pct) => {
+              const isSelected = settings.defaultReducedWeightPercent === pct;
+              return (
+                <TouchableOpacity
+                  key={pct}
+                  onPress={() => updateSettings({ defaultReducedWeightPercent: pct })}
+                  style={{
+                    paddingVertical: 8,
+                    paddingHorizontal: 16,
+                    borderRadius: 8,
+                    backgroundColor: isSelected
+                      ? '#f59e0b'
+                      : isDark ? '#27272a' : '#f4f4f5',
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontWeight: '600',
+                      color: isSelected ? '#ffffff' : isDark ? '#e4e4e7' : '#3f3f46',
+                    }}
+                  >
+                    {pct}%
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </Card>
 
         {/* Notifications */}
