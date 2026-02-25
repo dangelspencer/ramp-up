@@ -16,6 +16,7 @@ import { exerciseService } from './exercise.service';
 import { programService } from './program.service';
 import {
   calculateWeightFromPercentage,
+  roundToIncrement,
   checkAutoProgression,
   ExerciseConfig,
   CompletedSet,
@@ -233,56 +234,144 @@ export const workoutService = {
   },
 
   /**
+   * Update the reduced weight percent for a workout
+   */
+  async updateReducedWeightPercent(workoutId: string, percent: number): Promise<void> {
+    await db
+      .update(workouts)
+      .set({ reducedWeightPercent: percent })
+      .where(eq(workouts.id, workoutId));
+  },
+
+  /**
+   * Recalculate target weights for all incomplete sets in a workout
+   * based on the reduced weight percentage. When percent is 0, restores
+   * original weights by recalculating from the routine definition.
+   */
+  async recalculateTargetWeights(workoutId: string, reducedPercent: number): Promise<void> {
+    const workout = await this.getByIdWithDetails(workoutId);
+    if (!workout) return;
+
+    const routine = await routineService.getByIdWithDetails(workout.routineId);
+    if (!routine) return;
+
+    for (const workoutExercise of workout.exercises) {
+      const exercise = workoutExercise.exercise;
+
+      // Find the matching routine exercise to get weightType per set
+      const routineExercise = routine.exercises.find(
+        (re) => re.exerciseId === workoutExercise.exerciseId
+      );
+      if (!routineExercise) continue;
+
+      // Get barbell weight
+      let barbellWeight = 45;
+      if (exercise.barbellId) {
+        const barbellResults = await db
+          .select()
+          .from(barbells)
+          .where(eq(barbells.id, exercise.barbellId));
+        if (barbellResults.length > 0) {
+          barbellWeight = barbellResults[0].weight;
+        }
+      }
+
+      // Effective max for the day: original max reduced by the percentage
+      const reductionMultiplier = 1 - reducedPercent / 100;
+      const effectiveMax = exercise.maxWeight * reductionMultiplier;
+
+      for (const set of workoutExercise.sets) {
+        if (set.completed) continue; // Don't touch completed sets
+
+        // Find matching routine set by orderIndex
+        const routineSet = routineExercise.sets.find(
+          (rs) => rs.orderIndex === set.orderIndex
+        );
+        if (!routineSet) continue;
+
+        let newTargetWeight: number;
+
+        if (routineSet.weightType === 'percentage') {
+          newTargetWeight = calculateWeightFromPercentage(
+            effectiveMax,
+            routineSet.weightValue,
+            exercise.weightIncrement,
+            barbellWeight
+          );
+        } else if (routineSet.weightType === 'fixed') {
+          newTargetWeight = roundToIncrement(
+            routineSet.weightValue * reductionMultiplier,
+            exercise.weightIncrement
+          );
+        } else {
+          // 'bar' or 'bodyweight' - no change
+          continue;
+        }
+
+        await db
+          .update(workoutSets)
+          .set({ targetWeight: newTargetWeight })
+          .where(eq(workoutSets.id, set.id));
+      }
+    }
+  },
+
+  /**
    * Complete a workout and process auto-progression
    * Returns any exercises that had their max weight increased
+   * Skips progression entirely for reduced weight workouts
    */
   async completeWorkout(id: string): Promise<AutoProgressionResult[]> {
     const workout = await this.getByIdWithDetails(id);
     if (!workout) return [];
 
     const progressionResults: AutoProgressionResult[] = [];
+    const isReducedWeight = (workout.reducedWeightPercent ?? 0) > 0;
 
-    // Check each exercise for auto-progression
-    for (const workoutExercise of workout.exercises) {
-      const exercise = workoutExercise.exercise;
+    // Skip auto-progression entirely for reduced weight workouts
+    if (!isReducedWeight) {
+      // Check each exercise for auto-progression
+      for (const workoutExercise of workout.exercises) {
+        const exercise = workoutExercise.exercise;
 
-      if (!exercise.autoProgression) continue;
+        if (!exercise.autoProgression) continue;
 
-      const completedSets: CompletedSet[] = workoutExercise.sets.map((s) => ({
-        percentageOfMax: s.percentageOfMax,
-        targetReps: s.targetReps,
-        actualReps: s.actualReps,
-        completed: s.completed ?? false,
-      }));
+        const completedSets: CompletedSet[] = workoutExercise.sets.map((s) => ({
+          percentageOfMax: s.percentageOfMax,
+          targetReps: s.targetReps,
+          actualReps: s.actualReps,
+          completed: s.completed ?? false,
+        }));
 
-      const exerciseConfig: ExerciseConfig = {
-        maxWeight: exercise.maxWeight,
-        weightIncrement: exercise.weightIncrement,
-        autoProgression: true,
-        progressionInterval: exercise.progressionInterval,
-        successfulWorkouts: exercise.successfulWorkouts,
-      };
+        const exerciseConfig: ExerciseConfig = {
+          maxWeight: exercise.maxWeight,
+          weightIncrement: exercise.weightIncrement,
+          autoProgression: true,
+          progressionInterval: exercise.progressionInterval,
+          successfulWorkouts: exercise.successfulWorkouts,
+        };
 
-      const result = checkAutoProgression(exerciseConfig, completedSets);
+        const result = checkAutoProgression(exerciseConfig, completedSets);
 
-      if (result.shouldProgress) {
-        // Update the exercise max weight and reset successful workouts counter
-        await exerciseService.update(exercise.id, {
-          maxWeight: result.newMaxWeight,
-          successfulWorkouts: 0,
-        });
+        if (result.shouldProgress) {
+          // Update the exercise max weight and reset successful workouts counter
+          await exerciseService.update(exercise.id, {
+            maxWeight: result.newMaxWeight,
+            successfulWorkouts: 0,
+          });
 
-        progressionResults.push({
-          exerciseId: exercise.id,
-          exerciseName: exercise.name,
-          previousMax: exercise.maxWeight,
-          newMax: result.newMaxWeight,
-        });
-      } else if (result.wasSuccessful && result.newSuccessfulWorkouts !== undefined) {
-        // Update the successful workouts counter (but don't progress yet)
-        await exerciseService.update(exercise.id, {
-          successfulWorkouts: result.newSuccessfulWorkouts,
-        });
+          progressionResults.push({
+            exerciseId: exercise.id,
+            exerciseName: exercise.name,
+            previousMax: exercise.maxWeight,
+            newMax: result.newMaxWeight,
+          });
+        } else if (result.wasSuccessful && result.newSuccessfulWorkouts !== undefined) {
+          // Update the successful workouts counter (but don't progress yet)
+          await exerciseService.update(exercise.id, {
+            successfulWorkouts: result.newSuccessfulWorkouts,
+          });
+        }
       }
     }
 
