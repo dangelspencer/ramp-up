@@ -3,13 +3,14 @@ import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ChevronLeft, ChevronRight, Check, ArrowRight, Trophy, Thermometer, HeartPulse } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Check, ArrowRight, Trophy, HeartPulse } from 'lucide-react-native';
 
 import { RootStackParamList } from '../../App';
 import { useSettings, useActiveWorkout } from '@/hooks';
 import { Modal, ConfirmModal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { Button } from '@/components/ui/Button';
+import { Switch } from '@/components/ui/Switch';
 import { SetRow } from '@/components/workout/SetRow';
 import { LogSetModal } from '@/components/workout/LogSetModal';
 import { PlateCalculatorModal, NextSetPlates } from '@/components/workout/PlateCalculator';
@@ -53,7 +54,7 @@ export default function WorkoutScreen() {
     visible: boolean;
     weight: number | null;
   }>({ visible: false, weight: null });
-  const [showReducedWeightModal, setShowReducedWeightModal] = useState(false);
+  const [showFeelingModal, setShowFeelingModal] = useState(false);
   const [selectedReducedPercent, setSelectedReducedPercent] = useState(0);
   const [isApplyingReduction, setIsApplyingReduction] = useState(false);
 
@@ -87,13 +88,13 @@ export default function WorkoutScreen() {
     return () => clearInterval(interval);
   }, [state.startedAt, state.isActive]);
 
-  const handleOpenReducedWeightModal = useCallback(() => {
+  const handleOpenFeelingModal = useCallback(() => {
     setSelectedReducedPercent(
       state.reducedWeightPercent > 0
         ? state.reducedWeightPercent
         : settings.defaultReducedWeightPercent
     );
-    setShowReducedWeightModal(true);
+    setShowFeelingModal(true);
   }, [state.reducedWeightPercent, settings.defaultReducedWeightPercent]);
 
   const handleApplyReducedWeight = useCallback(async () => {
@@ -104,7 +105,7 @@ export default function WorkoutScreen() {
       Alert.alert('Error', 'Failed to apply reduced weight');
     } finally {
       setIsApplyingReduction(false);
-      setShowReducedWeightModal(false);
+      setShowFeelingModal(false);
     }
   }, [selectedReducedPercent, setReducedWeight]);
 
@@ -244,16 +245,10 @@ export default function WorkoutScreen() {
               <ChevronLeft size={24} color={isDark ? '#ffffff' : '#18181b'} />
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={handleOpenReducedWeightModal}
+              onPress={handleOpenFeelingModal}
               className={`p-2 rounded-lg ${isDark ? 'bg-zinc-800' : 'bg-white'}`}
             >
-              <Thermometer size={24} color={state.reducedWeightPercent > 0 ? '#f59e0b' : (isDark ? '#a1a1aa' : '#71717a')} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setSick(!state.isSick)}
-              className={`p-2 rounded-lg ${isDark ? 'bg-zinc-800' : 'bg-white'}`}
-            >
-              <HeartPulse size={24} color={state.isSick ? '#3b82f6' : (isDark ? '#a1a1aa' : '#71717a')} />
+              <HeartPulse size={24} color={state.isSick ? '#3b82f6' : state.reducedWeightPercent > 0 ? '#f59e0b' : (isDark ? '#a1a1aa' : '#71717a')} />
             </TouchableOpacity>
           </View>
           <View className="items-center flex-1 mx-2">
@@ -283,30 +278,30 @@ export default function WorkoutScreen() {
           {completedSets} / {totalSets} sets completed
         </Text>
 
-        {/* Reduced Weight Banner */}
-        {state.reducedWeightPercent > 0 && (
-          <TouchableOpacity
-            onPress={handleOpenReducedWeightModal}
-            className="mt-2 flex-row items-center justify-center gap-2 py-2 px-3 rounded-lg"
-            style={{ backgroundColor: isDark ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.1)' }}
-          >
-            <Thermometer size={16} color="#f59e0b" />
-            <Text style={{ color: '#f59e0b', fontWeight: '500', fontSize: 13 }}>
-              Reduced weight: -{state.reducedWeightPercent}% · Auto-progression paused
-            </Text>
-          </TouchableOpacity>
-        )}
-
         {/* Sick Day Banner */}
         {state.isSick && (
           <TouchableOpacity
-            onPress={() => setSick(false)}
+            onPress={handleOpenFeelingModal}
             className="mt-2 flex-row items-center justify-center gap-2 py-2 px-3 rounded-lg"
             style={{ backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.1)' }}
           >
             <HeartPulse size={16} color="#3b82f6" />
             <Text style={{ color: '#3b82f6', fontWeight: '500', fontSize: 13 }}>
               Sick day · Streak protected · Auto-progression paused
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Reduced Weight Banner */}
+        {state.reducedWeightPercent > 0 && (
+          <TouchableOpacity
+            onPress={handleOpenFeelingModal}
+            className="mt-2 flex-row items-center justify-center gap-2 py-2 px-3 rounded-lg"
+            style={{ backgroundColor: isDark ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.1)' }}
+          >
+            <HeartPulse size={16} color="#f59e0b" />
+            <Text style={{ color: '#f59e0b', fontWeight: '500', fontSize: 13 }}>
+              Reduced weight: -{state.reducedWeightPercent}% · Auto-progression paused
             </Text>
           </TouchableOpacity>
         )}
@@ -416,15 +411,35 @@ export default function WorkoutScreen() {
         />
       )}
 
-      {/* Reduced Weight Modal */}
+      {/* Feeling Modal */}
       <Modal
-        visible={showReducedWeightModal}
-        onClose={() => setShowReducedWeightModal(false)}
-        title="Reduced Weight"
+        visible={showFeelingModal}
+        onClose={() => setShowFeelingModal(false)}
+        title="How are you feeling?"
         position="bottom"
       >
-        <Text className={`mb-4 ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-          Lower all target weights when you're not feeling 100%. Auto-progression will be paused for this workout.
+        {/* Sick Day Toggle */}
+        <View className="flex-row items-center gap-3">
+          <HeartPulse size={20} color={state.isSick ? '#3b82f6' : (isDark ? '#a1a1aa' : '#71717a')} />
+          <View className="flex-1">
+            <Switch
+              value={state.isSick}
+              onValueChange={(val) => setSick(val)}
+              label="Sick day"
+              description="Streak protected · Auto-progression paused"
+            />
+          </View>
+        </View>
+
+        {/* Divider */}
+        <View className={`h-px my-2 ${isDark ? 'bg-zinc-700' : 'bg-zinc-200'}`} />
+
+        {/* Reduced Weight Section */}
+        <Text className={`mt-2 mb-1 font-medium ${isDark ? 'text-white' : 'text-zinc-900'}`}>
+          Reduced weight
+        </Text>
+        <Text className={`mb-3 text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+          Lower all target weights when you're not feeling 100%.
         </Text>
 
         <View className="flex-row flex-wrap gap-2 mb-4">
