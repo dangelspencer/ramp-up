@@ -57,6 +57,7 @@ interface ActiveWorkoutState {
   isCompleting: boolean;
   startedAt: string | null;
   reducedWeightPercent: number;
+  isSick: boolean;
 }
 
 type ActiveWorkoutAction =
@@ -72,7 +73,8 @@ type ActiveWorkoutAction =
   | { type: 'COMPLETE_WORKOUT'; payload: { progressionResults: AutoProgressionResult[] } }
   | { type: 'CANCEL_WORKOUT' }
   | { type: 'CLEAR_PROGRESSION_RESULTS' }
-  | { type: 'SET_REDUCED_WEIGHT'; payload: { percent: number; exercises: WorkoutExercise[] } };
+  | { type: 'SET_REDUCED_WEIGHT'; payload: { percent: number; exercises: WorkoutExercise[] } }
+  | { type: 'SET_SICK'; payload: boolean };
 
 const initialState: ActiveWorkoutState = {
   isActive: false,
@@ -91,6 +93,7 @@ const initialState: ActiveWorkoutState = {
   isCompleting: false,
   startedAt: null,
   reducedWeightPercent: 0,
+  isSick: false,
 };
 
 function activeWorkoutReducer(
@@ -117,6 +120,7 @@ function activeWorkoutReducer(
         })),
         startedAt: workout.startedAt,
         reducedWeightPercent: workout.reducedWeightPercent ?? 0,
+        isSick: workout.isSick ?? false,
       };
     }
 
@@ -244,6 +248,12 @@ function activeWorkoutReducer(
         exercises: action.payload.exercises,
       };
 
+    case 'SET_SICK':
+      return {
+        ...state,
+        isSick: action.payload,
+      };
+
     default:
       return state;
   }
@@ -278,6 +288,7 @@ interface ActiveWorkoutContextType {
   cancelWorkout: () => Promise<void>;
   clearProgressionResults: () => void;
   setReducedWeight: (percent: number) => Promise<void>;
+  setSick: (isSick: boolean) => Promise<void>;
 }
 
 const ActiveWorkoutContext = createContext<ActiveWorkoutContextType | undefined>(undefined);
@@ -466,6 +477,12 @@ export function ActiveWorkoutProvider({ children }: ActiveWorkoutProviderProps) 
     }
   }, [state.workoutId]);
 
+  const setSick = useCallback(async (isSick: boolean) => {
+    if (!state.workoutId) return;
+    await workoutService.updateIsSick(state.workoutId, isSick);
+    dispatch({ type: 'SET_SICK', payload: isSick });
+  }, [state.workoutId]);
+
   const clearProgressionResults = useCallback(() => {
     dispatch({ type: 'CLEAR_PROGRESSION_RESULTS' });
   }, []);
@@ -486,6 +503,7 @@ export function ActiveWorkoutProvider({ children }: ActiveWorkoutProviderProps) 
         cancelWorkout,
         clearProgressionResults,
         setReducedWeight,
+        setSick,
       }}
     >
       {children}
