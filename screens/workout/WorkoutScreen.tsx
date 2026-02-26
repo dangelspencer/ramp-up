@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ChevronLeft, ChevronRight, Check, ArrowRight, Trophy, Thermometer } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Check, ArrowRight, Trophy, Thermometer, HeartPulse } from 'lucide-react-native';
 
 import { RootStackParamList } from '../../App';
 import { useSettings, useActiveWorkout } from '@/hooks';
@@ -37,6 +37,7 @@ export default function WorkoutScreen() {
     completeWorkout,
     cancelWorkout,
     setReducedWeight,
+    setSick,
   } = useActiveWorkout();
 
   const { showToast } = useToast();
@@ -248,6 +249,12 @@ export default function WorkoutScreen() {
             >
               <Thermometer size={24} color={state.reducedWeightPercent > 0 ? '#f59e0b' : (isDark ? '#a1a1aa' : '#71717a')} />
             </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setSick(!state.isSick)}
+              className={`p-2 rounded-lg ${isDark ? 'bg-zinc-800' : 'bg-white'}`}
+            >
+              <HeartPulse size={24} color={state.isSick ? '#3b82f6' : (isDark ? '#a1a1aa' : '#71717a')} />
+            </TouchableOpacity>
           </View>
           <View className="items-center flex-1 mx-2">
             <Text numberOfLines={1} className={`font-semibold ${isDark ? 'text-white' : 'text-zinc-900'}`}>
@@ -286,6 +293,20 @@ export default function WorkoutScreen() {
             <Thermometer size={16} color="#f59e0b" />
             <Text style={{ color: '#f59e0b', fontWeight: '500', fontSize: 13 }}>
               Reduced weight: -{state.reducedWeightPercent}% · Auto-progression paused
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Sick Day Banner */}
+        {state.isSick && (
+          <TouchableOpacity
+            onPress={() => setSick(false)}
+            className="mt-2 flex-row items-center justify-center gap-2 py-2 px-3 rounded-lg"
+            style={{ backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.1)' }}
+          >
+            <HeartPulse size={16} color="#3b82f6" />
+            <Text style={{ color: '#3b82f6', fontWeight: '500', fontSize: 13 }}>
+              Sick day · Streak protected · Auto-progression paused
             </Text>
           </TouchableOpacity>
         )}
