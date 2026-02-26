@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { useSettings } from '@/hooks';
 import { Card } from '@/components/ui';
-import { Target, Flame, Check, ChevronRight, HeartPulse } from 'lucide-react-native';
+import { Target, Flame, Check, ChevronRight, Stethoscope } from 'lucide-react-native';
 import { GoalProgress } from '@/services/goal.service';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -97,7 +97,7 @@ export function GoalCard({ progress, onPress }: GoalCardProps) {
       {/* Status */}
       {!progress.isOnTrack && progress.hasSickWorkoutThisWeek && (
         <View className={`flex-row items-center gap-2 p-2 rounded-lg mt-2 ${isDark ? 'bg-blue-500/20' : 'bg-blue-50'}`}>
-          <HeartPulse size={16} color="#3b82f6" />
+          <Stethoscope size={16} color="#3b82f6" />
           <Text className={`text-sm ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
             Sick week — streak protected
           </Text>
