@@ -42,6 +42,7 @@ export function GoalCard({ progress, onPress }: GoalCardProps) {
         {DAYS.map((day, index) => {
           const isScheduled = progress.scheduledDays.includes(index);
           const isCompleted = (progress.completedDays ?? []).includes(index);
+          const isSickDay = (progress.sickDays ?? []).includes(index);
           const isToday = index === today;
 
           return (
@@ -60,7 +61,9 @@ export function GoalCard({ progress, onPress }: GoalCardProps) {
               <View
                 className={`w-8 h-8 rounded-full items-center justify-center ${
                   isCompleted
-                    ? 'bg-green-500'
+                    ? isSickDay
+                      ? 'bg-blue-500'
+                      : 'bg-green-500'
                     : isScheduled
                     ? isToday
                       ? 'bg-orange-500'
@@ -70,7 +73,8 @@ export function GoalCard({ progress, onPress }: GoalCardProps) {
                     : 'bg-transparent'
                 }`}
               >
-                {isCompleted && <Check size={14} color="#ffffff" />}
+                {isCompleted && isSickDay && <Stethoscope size={14} color="#ffffff" />}
+                {isCompleted && !isSickDay && <Check size={14} color="#ffffff" />}
                 {!isCompleted && isScheduled && (
                   <View
                     className={`w-2 h-2 rounded-full ${

@@ -13,6 +13,7 @@ export interface GoalProgress {
   isOnTrack: boolean;
   scheduledDays: number[];
   completedDays: number[];
+  sickDays: number[];
   nextScheduledDay: number | null;
   hasSickWorkoutThisWeek: boolean;
 }
@@ -241,6 +242,13 @@ export const goalService = {
     // Check if any workout this week is marked sick
     const hasSickWorkoutThisWeek = workoutsThisWeek.some((w) => w.isSick);
 
+    // Extract which days of the week had sick workouts
+    const sickDays = [...new Set(
+      workoutsThisWeek
+        .filter((w) => w.completedAt && w.isSick)
+        .map((w) => new Date(w.completedAt!).getDay())
+    )];
+
     return {
       workoutsThisWeek: workoutsThisWeek.length,
       workoutsTarget: goal.workoutsPerWeek,
@@ -248,6 +256,7 @@ export const goalService = {
       isOnTrack,
       scheduledDays,
       completedDays,
+      sickDays,
       nextScheduledDay,
       hasSickWorkoutThisWeek,
     };
