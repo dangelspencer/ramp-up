@@ -393,7 +393,8 @@ export const workoutService = {
       .where(eq(workouts.id, id));
 
     // If this is part of a program, advance the program position
-    if (workout.programId) {
+    // Skip advancement for sick workouts so the same routine comes up next time
+    if (workout.programId && !isSick) {
       const isComplete = await programService.isComplete(workout.programId);
       if (isComplete) {
         await programService.markComplete(workout.programId);
