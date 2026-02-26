@@ -12,6 +12,7 @@ import {
   Check,
   Trash2,
   Bell,
+  HeartPulse,
 } from 'lucide-react-native';
 import { useSettings, useGoals } from '@/hooks';
 import { notificationService } from '@/services/notification.service';
@@ -221,7 +222,9 @@ export default function SettingsGoalScreen() {
                     This Week's Progress
                   </Text>
                   <Text className={`text-sm ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                    {progress.isOnTrack ? 'On track!' : 'Keep going!'}
+                    {progress.hasSickWorkoutThisWeek && !progress.isOnTrack
+                      ? 'Sick week — streak protected'
+                      : progress.isOnTrack ? 'On track!' : 'Keep going!'}
                   </Text>
                 </View>
               </View>

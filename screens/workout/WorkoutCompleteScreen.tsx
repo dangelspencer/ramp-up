@@ -3,7 +3,7 @@ import { View, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Trophy, TrendingUp, Clock, Dumbbell, Check, Thermometer } from 'lucide-react-native';
+import { Trophy, TrendingUp, Clock, Dumbbell, Check, Thermometer, HeartPulse } from 'lucide-react-native';
 
 import { RootStackParamList } from '../../App';
 import { useSettings, useActiveWorkout, useWorkoutHistory } from '@/hooks';
@@ -140,6 +140,22 @@ export default function WorkoutCompleteScreen() {
             <CardContent>
               <Text className={`${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
                 Auto-progression was paused for this workout. Your exercise max weights remain unchanged.
+              </Text>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Sick Day Info */}
+        {latestWorkout?.isSick && (
+          <Card className="mb-6">
+            <CardHeader
+              title="Sick Day Workout"
+              subtitle="Your streak is safe"
+              icon={<HeartPulse size={20} color="#3b82f6" />}
+            />
+            <CardContent>
+              <Text className={`${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                This workout won't break your streak. Sick weeks are frozen — they don't count toward your streak, but they don't reset it either. Auto-progression was also paused.
               </Text>
             </CardContent>
           </Card>

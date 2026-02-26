@@ -13,6 +13,7 @@ import {
   XCircle,
   TrendingUp,
   Thermometer,
+  HeartPulse,
 } from 'lucide-react-native';
 
 import { RootStackParamList } from '../../App';
@@ -203,6 +204,19 @@ export default function WorkoutDetailScreen() {
               <Thermometer size={16} color="#f59e0b" />
               <Text style={{ color: '#f59e0b', fontWeight: '500', fontSize: 13 }}>
                 Reduced weight: -{workout.reducedWeightPercent}% · Auto-progression was paused
+              </Text>
+            </View>
+          )}
+
+          {/* Sick Day Banner */}
+          {workout.isSick && (
+            <View
+              className="flex-row items-center gap-2 mt-3 py-2 px-3 rounded-lg"
+              style={{ backgroundColor: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.1)' }}
+            >
+              <HeartPulse size={16} color="#3b82f6" />
+              <Text style={{ color: '#3b82f6', fontWeight: '500', fontSize: 13 }}>
+                Sick day · Streak was not affected
               </Text>
             </View>
           )}
