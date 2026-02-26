@@ -120,7 +120,8 @@ export async function createTables(): Promise<void> {
       started_at TEXT DEFAULT (datetime('now')) NOT NULL,
       completed_at TEXT,
       notes TEXT,
-      reduced_weight_percent INTEGER DEFAULT 0
+      reduced_weight_percent INTEGER DEFAULT 0,
+      is_sick INTEGER DEFAULT 0
     );
   `);
 
@@ -237,5 +238,19 @@ function runMigrations(): void {
     }
   } catch (error) {
     console.error('Migration error (workouts):', error);
+  }
+
+  // Migration: Add is_sick to workouts table
+  try {
+    const workoutTableInfo2 = expoDb.getAllSync('PRAGMA table_info(workouts)') as Array<{ name: string }>;
+    const workoutColumns2 = workoutTableInfo2.map((col) => col.name);
+
+    if (!workoutColumns2.includes('is_sick')) {
+      expoDb.execSync(`
+        ALTER TABLE workouts ADD COLUMN is_sick INTEGER DEFAULT 0;
+      `);
+    }
+  } catch (error) {
+    console.error('Migration error (workouts is_sick):', error);
   }
 }
