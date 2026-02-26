@@ -14,6 +14,7 @@ export interface GoalProgress {
   scheduledDays: number[];
   completedDays: number[];
   nextScheduledDay: number | null;
+  hasSickWorkoutThisWeek: boolean;
 }
 
 export const goalService = {
@@ -147,7 +148,9 @@ export const goalService = {
       .orderBy(desc(workouts.completedAt));
 
     // Group workouts by week number (0 = goal start week)
+    // Also track which weeks have sick workouts
     const workoutsByWeek = new Map<number, number>();
+    const sickWeeks = new Set<number>();
     for (const workout of completedWorkouts) {
       if (!workout.completedAt) continue;
       const workoutDate = new Date(workout.completedAt);
@@ -155,6 +158,9 @@ export const goalService = {
         (workoutDate.getTime() - goalWeekStart.getTime()) / msPerWeek
       );
       workoutsByWeek.set(weekNumber, (workoutsByWeek.get(weekNumber) ?? 0) + 1);
+      if (workout.isSick) {
+        sickWeeks.add(weekNumber);
+      }
     }
 
     // Count streak going backwards from most recent COMPLETED week
@@ -173,6 +179,9 @@ export const goalService = {
       const workoutsInWeek = workoutsByWeek.get(week) ?? 0;
       if (workoutsInWeek >= goal.workoutsPerWeek) {
         streak++;
+      } else if (sickWeeks.has(week)) {
+        // Sick week: freeze — don't increment, don't break
+        continue;
       } else {
         // Streak broken
         break;
@@ -229,6 +238,9 @@ export const goalService = {
     // Calculate streak from workout history instead of using stored value
     const streakWeeks = await this.calculateStreakFromHistory(goal);
 
+    // Check if any workout this week is marked sick
+    const hasSickWorkoutThisWeek = workoutsThisWeek.some((w) => w.isSick);
+
     return {
       workoutsThisWeek: workoutsThisWeek.length,
       workoutsTarget: goal.workoutsPerWeek,
@@ -237,6 +249,7 @@ export const goalService = {
       scheduledDays,
       completedDays,
       nextScheduledDay,
+      hasSickWorkoutThisWeek,
     };
   },
 
@@ -265,6 +278,9 @@ export const goalService = {
     const metGoal = workoutsThisWeek.length >= goal.workoutsPerWeek;
     const justHitGoal = workoutsThisWeek.length === goal.workoutsPerWeek;
 
+    // Check if any workout this week is marked sick
+    const hasSickWorkout = workoutsThisWeek.some((w) => w.isSick);
+
     if (metGoal) {
       // Increment streak only when we first hit the goal this week
       if (justHitGoal) {
@@ -281,8 +297,14 @@ export const goalService = {
       const allScheduledDaysPassed = scheduledDays.every((d) => d < today);
 
       if (allScheduledDaysPassed && workoutsThisWeek.length < goal.workoutsPerWeek) {
-        // Reset streak if we missed workouts
-        await this.updateStreak(goal.id, 0);
+        if (hasSickWorkout) {
+          // Sick week: recalculate streak from history (freezes sick weeks)
+          const streak = await this.calculateStreakFromHistory(goal);
+          await this.updateStreak(goal.id, streak);
+        } else {
+          // Reset streak if we missed workouts
+          await this.updateStreak(goal.id, 0);
+        }
         // Schedule encouragement notification for the weekend
         await this.scheduleWeeklyGoalNotification(false);
       }
