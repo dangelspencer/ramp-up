@@ -244,6 +244,16 @@ export const workoutService = {
   },
 
   /**
+   * Update the is_sick flag for a workout
+   */
+  async updateIsSick(workoutId: string, isSick: boolean): Promise<void> {
+    await db
+      .update(workouts)
+      .set({ isSick })
+      .where(eq(workouts.id, workoutId));
+  },
+
+  /**
    * Recalculate target weights for all incomplete sets in a workout
    * based on the reduced weight percentage. When percent is 0, restores
    * original weights by recalculating from the routine definition.
@@ -327,9 +337,10 @@ export const workoutService = {
 
     const progressionResults: AutoProgressionResult[] = [];
     const isReducedWeight = (workout.reducedWeightPercent ?? 0) > 0;
+    const isSick = workout.isSick ?? false;
 
-    // Skip auto-progression entirely for reduced weight workouts
-    if (!isReducedWeight) {
+    // Skip auto-progression entirely for reduced weight or sick workouts
+    if (!isReducedWeight && !isSick) {
       // Check each exercise for auto-progression
       for (const workoutExercise of workout.exercises) {
         const exercise = workoutExercise.exercise;
