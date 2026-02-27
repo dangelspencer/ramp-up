@@ -75,6 +75,43 @@ export const notificationService = {
   },
 
   /**
+   * Cancel today's workout reminder and reschedule it for next week
+   */
+  async cancelTodayWorkoutReminder(): Promise<void> {
+    const today = new Date().getDay();
+    const identifier = `workout-reminder-${today}`;
+
+    try {
+      await Notifications.cancelScheduledNotificationAsync(identifier);
+    } catch {
+      // Notification may not exist, ignore error
+    }
+
+    // Reschedule so it fires again next week
+    const settings = await settingsService.getAll();
+    if (!settings.notificationsEnabled || !settings.workoutRemindersEnabled) {
+      return;
+    }
+
+    const [hourStr, minuteStr] = settings.workoutReminderTime.split(':');
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Time to Train!',
+        body: "Don't forget your workout today. Stay consistent and keep progressing!",
+        sound: true,
+        data: { type: 'workout_reminder' },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+        weekday: today + 1,
+        hour: parseInt(hourStr, 10),
+        minute: parseInt(minuteStr, 10),
+      },
+      identifier,
+    });
+  },
+
+  /**
    * Cancel all workout reminder notifications
    */
   async cancelWorkoutReminders(): Promise<void> {

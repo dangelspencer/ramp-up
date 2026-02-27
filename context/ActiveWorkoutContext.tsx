@@ -427,6 +427,9 @@ export function ActiveWorkoutProvider({ children }: ActiveWorkoutProviderProps) 
     dispatch({ type: 'SKIP_REST_TIMER' });
     notificationService.cancelRestTimerNotification();
 
+    // Cancel today's workout reminder (already worked out)
+    notificationService.cancelTodayWorkoutReminder();
+
     dispatch({ type: 'START_COMPLETING' });
 
     const progressionResults = await workoutService.completeWorkout(state.workoutId);
