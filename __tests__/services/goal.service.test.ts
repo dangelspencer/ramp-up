@@ -269,6 +269,130 @@ describe('goalService', () => {
 
       expect(mockDb.update).toHaveBeenCalled();
     });
+
+    it('should pass healthyCount and hasSickWorkout=true when sick workouts present and goal met', async () => {
+      const mockGoal = {
+        id: '1',
+        workoutsPerWeek: 2,
+        scheduledDays: '[1, 3, 5]',
+        currentStreak: 1,
+        isActive: true,
+      };
+
+      const mockWhere = jest.fn().mockResolvedValue([mockGoal]);
+      const mockFrom = jest.fn().mockReturnValue({ where: mockWhere });
+      (mockDb.select as jest.Mock).mockReturnValue({ from: mockFrom });
+
+      // 2 healthy + 1 sick = goal of 2 is exactly met
+      mockWorkoutService.getWorkoutsThisWeek.mockResolvedValue([
+        { id: 'w1', completedAt: '2024-01-08T10:00:00', isSick: false } as any,
+        { id: 'w2', completedAt: '2024-01-09T10:00:00', isSick: false } as any,
+        { id: 'w3', completedAt: '2024-01-10T10:00:00', isSick: true } as any,
+      ]);
+
+      const mockUpdateWhere = jest.fn().mockResolvedValue([]);
+      const mockSet = jest.fn().mockReturnValue({ where: mockUpdateWhere });
+      (mockDb.update as jest.Mock).mockReturnValue({ set: mockSet });
+
+      await goalService.checkAndUpdateStreak();
+
+      // Should pass healthyCount (2), not total (3), and hasSickWorkout=true
+      expect(notificationService.sendGoalAchievedNotification).toHaveBeenCalledWith(2, true);
+    });
+
+    it('should pass hasSickWorkout=true to encouragement when sick and goal missed', async () => {
+      // Set to Saturday so all scheduled days (Mon, Wed, Fri) have passed
+      jest.setSystemTime(new Date('2024-01-13T12:00:00')); // Saturday
+
+      const mockGoal = {
+        id: '1',
+        workoutsPerWeek: 3,
+        scheduledDays: '[1, 3, 5]',
+        currentStreak: 2,
+        isActive: true,
+        startDate: '2024-01-01',
+      };
+
+      const mockWhere = jest.fn().mockResolvedValue([mockGoal]);
+      const mockFrom = jest.fn().mockReturnValue({ where: mockWhere });
+
+      // For calculateStreakFromHistory query
+      const mockWorkoutsOrderBy = jest.fn().mockResolvedValue([]);
+      const mockWorkoutsWhere = jest.fn().mockReturnValue({ orderBy: mockWorkoutsOrderBy });
+      const mockWorkoutsFrom = jest.fn().mockReturnValue({ where: mockWorkoutsWhere });
+
+      let selectCallCount = 0;
+      (mockDb.select as jest.Mock).mockImplementation(() => {
+        selectCallCount++;
+        if (selectCallCount <= 1) {
+          return { from: mockFrom };
+        }
+        return { from: mockWorkoutsFrom };
+      });
+
+      // 1 healthy + 1 sick — goal of 3 is missed
+      mockWorkoutService.getWorkoutsThisWeek.mockResolvedValue([
+        { id: 'w1', completedAt: '2024-01-08T10:00:00', isSick: false } as any,
+        { id: 'w2', completedAt: '2024-01-10T10:00:00', isSick: true } as any,
+      ]);
+
+      const mockUpdateWhere = jest.fn().mockResolvedValue([]);
+      const mockSet = jest.fn().mockReturnValue({ where: mockUpdateWhere });
+      (mockDb.update as jest.Mock).mockReturnValue({ set: mockSet });
+
+      // Enable goal notifications so scheduleWeeklyGoalNotification proceeds
+      (settingsService.getAll as jest.Mock).mockResolvedValue({
+        goalNotificationsEnabled: true,
+        goalNotificationTime: '09:00',
+        goalNotificationDay: 6,
+      });
+
+      await goalService.checkAndUpdateStreak();
+
+      expect(notificationService.scheduleGoalEncouragementNotification).toHaveBeenCalledWith(
+        6, 9, 0, true
+      );
+    });
+
+    it('should pass hasSickWorkout=false for healthy week notifications', async () => {
+      const mockGoal = {
+        id: '1',
+        workoutsPerWeek: 3,
+        scheduledDays: '[1, 3, 5]',
+        currentStreak: 2,
+        isActive: true,
+      };
+
+      const mockWhere = jest.fn().mockResolvedValue([mockGoal]);
+      const mockFrom = jest.fn().mockReturnValue({ where: mockWhere });
+      (mockDb.select as jest.Mock).mockReturnValue({ from: mockFrom });
+
+      // Exactly 3 healthy workouts, no sick
+      mockWorkoutService.getWorkoutsThisWeek.mockResolvedValue([
+        { id: 'w1', completedAt: '2024-01-08T10:00:00', isSick: false } as any,
+        { id: 'w2', completedAt: '2024-01-09T10:00:00', isSick: false } as any,
+        { id: 'w3', completedAt: '2024-01-10T10:00:00', isSick: false } as any,
+      ]);
+
+      const mockUpdateWhere = jest.fn().mockResolvedValue([]);
+      const mockSet = jest.fn().mockReturnValue({ where: mockUpdateWhere });
+      (mockDb.update as jest.Mock).mockReturnValue({ set: mockSet });
+
+      // Enable goal notifications
+      (settingsService.getAll as jest.Mock).mockResolvedValue({
+        goalNotificationsEnabled: true,
+        goalNotificationTime: '09:00',
+        goalNotificationDay: 6,
+      });
+
+      await goalService.checkAndUpdateStreak();
+
+      // Should pass healthyCount (3) and hasSickWorkout=false
+      expect(notificationService.sendGoalAchievedNotification).toHaveBeenCalledWith(3, false);
+      expect(notificationService.scheduleGoalCelebrationNotification).toHaveBeenCalledWith(
+        6, 9, 0, false
+      );
+    });
   });
 
   describe('delete', () => {
