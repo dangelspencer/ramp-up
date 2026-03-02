@@ -301,7 +301,7 @@ export const goalService = {
         await notificationService.sendGoalAchievedNotification(healthyCount, hasSickWorkout);
       }
       // Schedule celebration notification for the weekend
-      await this.scheduleWeeklyGoalNotification(true);
+      await this.scheduleWeeklyGoalNotification(true, hasSickWorkout);
     } else {
       // Check if we're past all scheduled days this week
       const scheduledDays = JSON.parse(goal.scheduledDays) as number[];
@@ -318,7 +318,7 @@ export const goalService = {
           await this.updateStreak(goal.id, 0);
         }
         // Schedule encouragement notification for the weekend
-        await this.scheduleWeeklyGoalNotification(false);
+        await this.scheduleWeeklyGoalNotification(false, hasSickWorkout);
       }
     }
   },
@@ -326,9 +326,9 @@ export const goalService = {
   /**
    * Schedule the weekly goal notification based on success/failure
    */
-  async scheduleWeeklyGoalNotification(succeeded: boolean): Promise<void> {
+  async scheduleWeeklyGoalNotification(succeeded: boolean, hasSickWorkout: boolean = false): Promise<void> {
     const settings = await settingsService.getAll();
-    
+
     if (!settings.goalNotificationsEnabled) {
       return;
     }
@@ -337,9 +337,9 @@ export const goalService = {
     const dayOfWeek = settings.goalNotificationDay;
 
     if (succeeded) {
-      await notificationService.scheduleGoalCelebrationNotification(dayOfWeek, hour, minute);
+      await notificationService.scheduleGoalCelebrationNotification(dayOfWeek, hour, minute, hasSickWorkout);
     } else {
-      await notificationService.scheduleGoalEncouragementNotification(dayOfWeek, hour, minute);
+      await notificationService.scheduleGoalEncouragementNotification(dayOfWeek, hour, minute, hasSickWorkout);
     }
   },
 

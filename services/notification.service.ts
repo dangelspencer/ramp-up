@@ -305,7 +305,8 @@ export const notificationService = {
   async scheduleGoalCelebrationNotification(
     dayOfWeek: number,
     hour: number,
-    minute: number
+    minute: number,
+    hasSickWorkout: boolean = false
   ): Promise<void> {
     const settings = await settingsService.getAll();
     if (!settings.notificationsEnabled || !settings.goalNotificationsEnabled) {
@@ -315,10 +316,14 @@ export const notificationService = {
     // Cancel any existing goal notification first
     await this.cancelGoalNotifications();
 
+    const body = hasSickWorkout
+      ? "You pushed through and hit your goal despite feeling sick. Take it easy and recover strong!"
+      : "You crushed it this week! Keep the momentum going!";
+
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Goal Achieved!',
-        body: "You crushed it this week! Keep the momentum going!",
+        body,
         sound: true,
         data: { type: 'goal_celebration' },
       },
@@ -338,7 +343,8 @@ export const notificationService = {
   async scheduleGoalEncouragementNotification(
     dayOfWeek: number,
     hour: number,
-    minute: number
+    minute: number,
+    hasSickWorkout: boolean = false
   ): Promise<void> {
     const settings = await settingsService.getAll();
     if (!settings.notificationsEnabled || !settings.goalNotificationsEnabled) {
@@ -348,10 +354,17 @@ export const notificationService = {
     // Cancel any existing goal notification first
     await this.cancelGoalNotifications();
 
+    const title = hasSickWorkout
+      ? 'Rest Up, Come Back Strong'
+      : 'New Week, Fresh Start!';
+    const body = hasSickWorkout
+      ? "Being sick is never easy. Your streak is safe — focus on recovery and get back to it when you're ready."
+      : "Let's make this week count. You've got this!";
+
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: 'New Week, Fresh Start!',
-        body: "Let's make this week count. You've got this!",
+        title,
+        body,
         sound: true,
         data: { type: 'goal_encouragement' },
       },
@@ -368,16 +381,23 @@ export const notificationService = {
   /**
    * Send immediate goal achieved notification
    */
-  async sendGoalAchievedNotification(workoutsCompleted: number): Promise<void> {
+  async sendGoalAchievedNotification(
+    workoutsCompleted: number,
+    hasSickWorkout: boolean = false
+  ): Promise<void> {
     const settings = await settingsService.getAll();
     if (!settings.notificationsEnabled || !settings.goalNotificationsEnabled) {
       return;
     }
 
+    const body = hasSickWorkout
+      ? "You hit your goal even while under the weather — that's serious dedication. Make sure to rest up!"
+      : `Amazing! You completed ${workoutsCompleted} workout${workoutsCompleted !== 1 ? 's' : ''} this week. Keep up the great work!`;
+
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Weekly Goal Achieved!',
-        body: `Amazing! You completed ${workoutsCompleted} workout${workoutsCompleted !== 1 ? 's' : ''} this week. Keep up the great work!`,
+        body,
         sound: true,
         data: { type: 'goal_achieved' },
       },
