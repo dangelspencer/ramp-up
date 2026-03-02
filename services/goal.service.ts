@@ -298,7 +298,7 @@ export const goalService = {
       if (justHitGoal) {
         await this.updateStreak(goal.id, (goal.currentStreak ?? 0) + 1);
         // Send immediate celebration notification
-        await notificationService.sendGoalAchievedNotification(workoutsThisWeek.length);
+        await notificationService.sendGoalAchievedNotification(healthyCount, hasSickWorkout);
       }
       // Schedule celebration notification for the weekend
       await this.scheduleWeeklyGoalNotification(true);
